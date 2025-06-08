@@ -71,41 +71,57 @@ public class Events {
      */
 
     public static void onExplosion(Level level, Explosion explosion, List<Entity> entities, double v) {
-        if(ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() && !level.isClientSide)
-            for (int x = -2; x < 2; x++) {
-                for (int y = -2; y < 2; y++) {
-                    for (int z = -2; z < 2; z++) {
-                        BlockPos pos = new BlockPos((int) (x + explosion.x), (int) (y + explosion.y), (int) (z + explosion.z));
+        if (ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() && !level.isClientSide) {
+            final int radius = 2;
+            final int radiusSq = 4;
 
-                        if (!level.isInWorldBounds(pos)) continue;
-                        if(Math.abs(Math.sqrt(x*x+y*y+z*z)) < 2) {
-                            FluidState fluidState = level.getFluidState(pos);
+            for (int x = -radius; x <= radius; x++) {
+                for (int y = -radius; y <= radius; y++) {
+                    for (int z = -radius; z <= radius; z++) {
+                        // restrict effect to sphere with radius 2
+                        if (x*x + y*y + z*z >= radiusSq)
+                            continue; 
 
-                            if (FuelTypeManager.getGeneratedSpeed(fluidState.getType()) != 0) {
-                                level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                                try {
-                                    level.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(), 3, true, Level.ExplosionInteraction.BLOCK);
-                                }catch (StackOverflowError ignored){}
-                            }
-                            BlockEntity be = level.getBlockEntity(pos);
-                            if(be == null)
-                                continue;
-                            var tank = TransferUtil.getFluidStorage(be);
-                            if(tank == null)
-                                continue;
+                        BlockPos pos = new BlockPos((int)(x + explosion.x), (int)(y + explosion.y),
+                                (int)(z + explosion.z));
 
-                            FluidStack fluid = TransferUtil.getFirstFluid(tank);
+                        // out of bounds check
+                        if (!level.isInWorldBounds(pos))
+                            continue; 
 
-                            if(FuelTypeManager.getGeneratedSpeed(fluid.getFluid()) == 0)
-                                continue;
+                        FluidState fluidState = level.getFluidState(pos);
+
+                        if (FuelTypeManager.getGeneratedSpeed(fluidState.getType()) != 0) {
                             level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
                             try {
-                                level.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(), 3 + ((float) fluid.getAmount() / 500), true, Level.ExplosionInteraction.BLOCK);
-                            }catch (StackOverflowError ignored){}
+                                level.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(), 3, true,
+                                        Level.ExplosionInteraction.BLOCK);
+                            } catch (StackOverflowError ignored) {}
                         }
+                        BlockEntity be = level.getBlockEntity(pos);
+                        if (be == null)
+                            continue;
+                        var tank = TransferUtil.getFluidStorage(be);
+                        if (tank == null)
+                            continue;
+
+                        FluidStack fluid = TransferUtil.getFirstFluid(tank);
+
+                        // ensure fluid tank is not empty
+                        if (fluid == null || fluid.isEmpty())
+                            continue;
+
+                        if (FuelTypeManager.getGeneratedSpeed(fluid.getFluid()) == 0)
+                            continue;
+                        level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+                        try {
+                            level.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(),
+                                    3 + ((float) fluid.getAmount() / 500), true, Level.ExplosionInteraction.BLOCK);
+                        } catch (StackOverflowError ignored) {}
                     }
                 }
             }
+        }
     }
 
     /*TODO
