@@ -5,6 +5,8 @@ import com.jesz.createdieselgenerators.blocks.ICDGKinetics;
 import com.jesz.createdieselgenerators.commands.CDGCommands;
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
 import com.jesz.createdieselgenerators.items.ItemRegistry;
+import com.jesz.createdieselgenerators.other.CombustionHelper;
+import com.jesz.createdieselgenerators.other.CombustionHelper.*;
 import com.jesz.createdieselgenerators.other.FuelTypeManager;
 import com.jozufozu.flywheel.util.AnimationTickHolder;
 import com.mojang.brigadier.CommandDispatcher;
@@ -53,9 +55,15 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
 
 public class Events {
 
@@ -70,68 +78,150 @@ public class Events {
     }
      */
 
-    public static void onExplosion(Level level, Explosion explosion, List<Entity> entities, double v) {
-        System.out.println("onExplosion called!");
+    /**
+     * Pre-calculating the sphere offsets should be slightly more efficient than the previous cube scanning method. 
+     * It also allows the search to begin from the inside out, which likely does not offer any additional benefit.
+     */
+    public static final List<PointOffset> SPHERICAL_OFFSETS;
+    static {
+        final int radius = 2;  // functionally 2.5
+        final int radiusSq = 6;  // 2.5 * 2.5
 
-        if (ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() && !level.isClientSide) {
-            final int radius = 2;  // functionally 2.5
-            final int radiusSq = 6;  // 2.5 * 2.5
-
-            for (int x = -radius; x <= radius; x++) {
-                for (int y = -radius; y <= radius; y++) {
-                    for (int z = -radius; z <= radius; z++) {
-                        // restrict effect to sphere with radius 2
-                        if (x*x + y*y + z*z >= radiusSq)
-                            continue; 
-
-                        BlockPos pos = new BlockPos((int)(x + explosion.x), (int)(y + explosion.y),
-                                (int)(z + explosion.z));
-
-                        // out of bounds check
-                        if (!level.isInWorldBounds(pos))
-                            continue; 
-
-                        FluidState fluidState = level.getFluidState(pos);
-                        
-                        // fixed size explosion from combustible fluid
-                        if (FuelTypeManager.getGeneratedSpeed(fluidState.getType()) != 0) {
-                            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                            try {
-                                System.out.println("    constant (3) explosion triggered!");
-                                level.explode(null, pos.getX(), pos.getY(), pos.getZ(), 3, true,
-                                        Level.ExplosionInteraction.BLOCK);
-                                System.out.println("    ...exited!");
-                            } catch (StackOverflowError ignored) {}
-                            continue;
-                        }
-
-                        BlockEntity be = level.getBlockEntity(pos);
-                        if (be == null)
-                            continue;
-                        var tank = TransferUtil.getFluidStorage(be);
-                        if (tank == null)
-                            continue;
-
-                        FluidStack fluid = TransferUtil.getFirstFluid(tank);
-
-                        // ensure fluid tank is not empty
-                        if (fluid == null || fluid.isEmpty())
-                            continue;
-
-                        // variable size explosion from fluid tank
-                        if (FuelTypeManager.getGeneratedSpeed(fluid.getFluid()) == 0)
-                            continue;  // do not explode if tank is empty? <- may be redundant?
-                        level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                        try {
-                            System.out.println("    variable " + (Math.min(3 + ((float) fluid.getAmount() / 40500), 127f)) + " explosion triggered");
-                            level.explode(null, pos.getX(), pos.getY(), pos.getZ(),
-                                    Math.min(3 + ((float) fluid.getAmount() / 40500), 127f), true, Level.ExplosionInteraction.BLOCK);
-                            System.out.println("    ...exited!");
-                        } catch (StackOverflowError ignored) {}
+        SPHERICAL_OFFSETS = new ArrayList<>();
+        // precalculate all points that satisfy x*x + y*y + z*z >= radiusSq
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (dx * dx + dy * dy + dz * dz < radiusSq) {
+                        SPHERICAL_OFFSETS.add(new PointOffset(dx, dy, dz));
                     }
                 }
             }
         }
+
+        // sort from inside out (from 0, 0, 0)
+        SPHERICAL_OFFSETS.sort(Comparator.comparingInt(p -> p.dx() * p.dx() + p.dy() * p.dy() + p.dz() * p.dz()));
+    }
+
+    /**
+     * Detects combustible blocks (fluid tanks, etc.) and triggers an explosion on them scaling with the amount of fuel.
+     * 
+     * The logic behind the detection algorithm is to solve two problems with the original:
+     * 
+     *  1. Explosion propogation is *greedy* (propogating immediately upon the first detected target)
+     *  2. Explosion propogation is *recursive* (leading to concerning call stacks and possible stack overflows)
+     * 
+     * To solve this, we split the the explosion search into three phases:
+     * 
+     *  0. Lazy initial search phase 
+     *     In most cases, we expect there to be no combustibles. In this case, it is probably acceptable to save some
+     *     resources by only checking the initial radius without initializing the overhead of the BFS. While this does
+     *     mean there will be slightly more work done if there is a combustible, it should be fairly negligible.
+     *  1. Search phase (selecting all valid targets)
+     *     Iteratively select all targets in a BFS, saving already searched nodes in a hashmap to prevent re-searching 
+     *     of already searched coordinates. This should prevent the overhead of recursion.
+     *  2. Execute phase (triggering all explosions)
+     *     Execute all explosions. Ideally, there would be a way to stop these explosions from calling onExplosion as 
+     *     well, but that is not currently in scope.
+     * 
+     * The main benefit of this function is that while it can't stop recursive calls, it should prevent them from 
+     * occurring during normal gameplay by selecting and removing all possible targets of recursion. 
+     * One drawback is that if somehow the function is repeatedly called recursively, it would lead to more lag than the 
+     * original due to the increased overhead. This should not happen in normal gameplay, though. I'm not sure what 
+     * would cause more liquid tanks to appear in the same tick after the search is executed, but whatever's doing that 
+     * should probably stop.
+     */
+    public static void onExplosion(Level level, Explosion explosion, List<Entity> entities, double v) {
+        System.out.println("> onExplosion called!");
+
+        if (!ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() || level.isClientSide)
+            return;
+       
+        /**
+         * Using PointCoordinate over BlockPos should be better, since PointCoordinate should be faster to initialize.
+         * Each instance of BlockPos is only used to check if the block is combustible, and due to the BFS design, 
+         * BlockPos instances are never reused, so storing them doesn't make much sense. 
+         */
+        Queue<PointCoordinate> toSearch = null; // lazy init
+        Set<PointCoordinate> processed = null;  // lazy init
+        List<PointExplosion> found = new ArrayList<>(); // collect all found targets
+
+        // lazy initial search phase
+        System.out.println("> initial search starting...");
+
+        for (PointOffset offset : SPHERICAL_OFFSETS) {
+            Optional<PointExplosion> opt = CombustionHelper.detectAndClean(level, (int) (explosion.x + offset.dx()),
+                    (int) (explosion.y + offset.dy()), (int) (explosion.z + offset.dz()));
+
+            if (!opt.isPresent()) {
+                continue;
+            } else {
+                System.out.println("found " + opt.get());
+                found.add(opt.get());
+            }
+        }
+
+        if (found.isEmpty()) {
+            System.out.println("> finished early, no combustibles found!");
+            return;
+        } else {
+            // late loading to compensate for lazy initial search
+            processed = new HashSet<PointCoordinate>();
+            for (PointOffset offset : SPHERICAL_OFFSETS) {
+                processed.add(new PointCoordinate((int) (offset.dx() + explosion.x), (int) (offset.dy() + explosion.y),
+                    (int) (offset.dz() + explosion.z)));
+            }
+            System.out.println("processed set contains " + processed.size() + " elements");
+
+            System.out.println("search queue: ");
+            toSearch = new ArrayDeque<PointCoordinate>();
+            for (PointExplosion pe : found) {
+                System.out.println(pe);
+                toSearch.add(new PointCoordinate(pe));
+            }
+        }
+    
+        // search phase
+        System.out.println("> search phase starting...");
+
+        while (toSearch != null && !toSearch.isEmpty()) {
+            PointCoordinate center = toSearch.poll();
+            System.out.println("searching from " + center + "...");
+
+
+            for (PointOffset offset : SPHERICAL_OFFSETS) {
+                PointCoordinate current = center.applyOffset(offset);
+
+                // continue if already processed
+                if (processed.contains(current))
+                    continue;
+                else {
+                    processed.add(current);
+                }
+
+                Optional<PointExplosion> opt = CombustionHelper.detectAndClean(level, current);
+
+                if (!opt.isPresent()) {
+                    continue;
+                } else {
+                    System.out.println("found " + opt.get());
+                    toSearch.add(current);
+                    found.add(opt.get());
+                }
+            }
+        }
+
+        // execute phase
+        System.out.println("> execute phase starting...");
+
+        for (PointExplosion pe : found) {
+            // do explosion
+            System.out.println(String.format("    [%d %d %d] size %.2f explosion triggered", pe.x(), pe.y(), pe.z(), pe.explosionSize()));
+            level.explode(null, pe.x(), pe.y(), pe.z(), pe.explosionSize(), true, Level.ExplosionInteraction.BLOCK);
+            System.out.println("    explosion exited!");
+        }
+
+        System.out.println("> done!");
     }
 
     /*TODO

@@ -46,7 +46,6 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 public class LighterItem extends Item implements CapacityEnchantment.ICapacityEnchantable, CustomEnchantingBehaviorItem, FluidStorageItem, EntityTickListenerItem {
     public LighterItem(Properties properties) {
@@ -147,16 +146,17 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
                     var fluid = TransferUtil.getFirstFluid(tank);
                     //IFluidHandler tank = cb.getCapability(ForgeCapabilities.FLUID_HANDLER).orElse(null);
 
-                    if (tank == null)
+                    if (tank == null || fluid == null || fluid.isEmpty())
                         return use(context.getLevel(), context.getPlayer(), context.getHand()).getResult();
                     if (FuelTypeManager.getGeneratedSpeed(fluid.getFluid()) != 0) {
                         // isolate block modification to server-side
                         if (!level.isClientSide()) {
                             level.setBlock(blockpos, Blocks.AIR.defaultBlockState(), 3);
-                            System.out.println("    lighter variable " + (Math.min(3 + ((float) fluid.getAmount() / 40500), 127f)) + " explosion triggered");
+                            System.out.println("    lighter size " + (Math.min(3 + ((float) fluid.getAmount() / 40500), 127f)) + " explosion triggered");
                             level.explode(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), Math.min(3 + ((float) fluid.getAmount() / 40500), 127f), true, Level.ExplosionInteraction.BLOCK);
                             System.out.println("    ...exited!");
 
+                            // lower fluid amount in lighter
                             CompoundTag tankCompound = itemstack.getTag().getCompound("Fluid");
                             FluidStack fStack = FluidStack.loadFluidStackFromNBT(tankCompound);
                             if (FuelTypeManager.getGeneratedSpeed(fStack.getFluid()) != 0 && itemstack.getTag().getInt("Type") == 2) {
