@@ -74,8 +74,8 @@ public class Events {
         System.out.println("onExplosion called!");
 
         if (ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() && !level.isClientSide) {
-            final int radius = 2;
-            final int radiusSq = 4;
+            final int radius = 2;  // functionally 2.5
+            final int radiusSq = 6;  // 2.5 * 2.5
 
             for (int x = -radius; x <= radius; x++) {
                 for (int y = -radius; y <= radius; y++) {
