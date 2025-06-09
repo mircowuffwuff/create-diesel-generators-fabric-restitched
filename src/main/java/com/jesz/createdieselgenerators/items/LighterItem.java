@@ -130,6 +130,8 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
 
     @Override
     public InteractionResult useOn(UseOnContext context) {
+        System.out.println("lighter used!");
+
         Player player = context.getPlayer();
         Level level = context.getLevel();
         BlockPos blockpos = context.getClickedPos();
@@ -148,15 +150,25 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
                     if (tank == null)
                         return use(context.getLevel(), context.getPlayer(), context.getHand()).getResult();
                     if (FuelTypeManager.getGeneratedSpeed(fluid.getFluid()) != 0) {
-                        level.setBlock(blockpos, Blocks.AIR.defaultBlockState(), 3);
-                        level.explode(null, null, null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), 3 + ((float) fluid.getAmount() / 500), true, Level.ExplosionInteraction.BLOCK);
+                        // isolate block modification to server-side
+                        if (!level.isClientSide()) {
+                            level.setBlock(blockpos, Blocks.AIR.defaultBlockState(), 3);
+                            System.out.println("    lighter variable " + (Math.min(3 + ((float) fluid.getAmount() / 40500), 127f)) + " explosion triggered");
+                            level.explode(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), Math.min(3 + ((float) fluid.getAmount() / 40500), 127f), true, Level.ExplosionInteraction.BLOCK);
+                            System.out.println("    ...exited!");
 
-                        CompoundTag tankCompound = itemstack.getTag().getCompound("Fluid");
-                        FluidStack fStack = FluidStack.loadFluidStackFromNBT(tankCompound);
-                        if (FuelTypeManager.getGeneratedSpeed(fStack.getFluid()) != 0 && itemstack.getTag().getInt("Type") == 2) {
-                            fStack.setAmount(fStack.getAmount() - 1);
-                            fStack.writeToNBT(itemstack.getTag().getCompound("Fluid"));
+                            CompoundTag tankCompound = itemstack.getTag().getCompound("Fluid");
+                            FluidStack fStack = FluidStack.loadFluidStackFromNBT(tankCompound);
+                            if (FuelTypeManager.getGeneratedSpeed(fStack.getFluid()) != 0 && itemstack.getTag().getInt("Type") == 2) {
+                                fStack.setAmount(fStack.getAmount() - 1);
+                                fStack.writeToNBT(itemstack.getTag().getCompound("Fluid"));
+                            }
+                        } else {
+                            System.out.println("    explosion disabled (client-side)");
                         }
+                        
+
+                        
                         return InteractionResult.sidedSuccess(level.isClientSide());
                     }
                 }
@@ -224,6 +236,8 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
 
     @Override
     public boolean onEntityItemUpdate(ItemStack stack, ItemEntity itemEntity) {
+        System.out.println("lighter item update?");
+
         if(itemEntity.getItem().is(ItemRegistry.LIGHTER.get()) && ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() && itemEntity.getItem().getTag() != null) {
             if(itemEntity.getItem().getTag().getInt("Type") == 2) {
                 FluidState fState = itemEntity.level().getFluidState(new BlockPos(itemEntity.getBlockX(), itemEntity.getBlockY(), itemEntity.getBlockZ()));

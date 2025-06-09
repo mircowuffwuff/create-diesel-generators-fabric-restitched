@@ -71,6 +71,8 @@ public class Events {
      */
 
     public static void onExplosion(Level level, Explosion explosion, List<Entity> entities, double v) {
+        System.out.println("onExplosion called!");
+
         if (ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() && !level.isClientSide) {
             final int radius = 2;
             final int radiusSq = 4;
@@ -90,14 +92,19 @@ public class Events {
                             continue; 
 
                         FluidState fluidState = level.getFluidState(pos);
-
+                        
+                        // fixed size explosion from combustible fluid
                         if (FuelTypeManager.getGeneratedSpeed(fluidState.getType()) != 0) {
                             level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
                             try {
-                                level.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(), 3, true,
+                                System.out.println("    constant (3) explosion triggered!");
+                                level.explode(null, pos.getX(), pos.getY(), pos.getZ(), 3, true,
                                         Level.ExplosionInteraction.BLOCK);
+                                System.out.println("    ...exited!");
                             } catch (StackOverflowError ignored) {}
+                            continue;
                         }
+
                         BlockEntity be = level.getBlockEntity(pos);
                         if (be == null)
                             continue;
@@ -111,12 +118,15 @@ public class Events {
                         if (fluid == null || fluid.isEmpty())
                             continue;
 
+                        // variable size explosion from fluid tank
                         if (FuelTypeManager.getGeneratedSpeed(fluid.getFluid()) == 0)
-                            continue;
+                            continue;  // do not explode if tank is empty? <- may be redundant?
                         level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
                         try {
-                            level.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(),
-                                    3 + ((float) fluid.getAmount() / 500), true, Level.ExplosionInteraction.BLOCK);
+                            System.out.println("    variable " + (Math.min(3 + ((float) fluid.getAmount() / 40500), 127f)) + " explosion triggered");
+                            level.explode(null, pos.getX(), pos.getY(), pos.getZ(),
+                                    Math.min(3 + ((float) fluid.getAmount() / 40500), 127f), true, Level.ExplosionInteraction.BLOCK);
+                            System.out.println("    ...exited!");
                         } catch (StackOverflowError ignored) {}
                     }
                 }
