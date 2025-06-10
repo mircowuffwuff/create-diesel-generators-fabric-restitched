@@ -71,11 +71,14 @@ public class CombustionHelper {
 
         if (FuelTypeManager.getGeneratedSpeed(fluid.getFluid()) == 0)
             return Optional.empty(); // do not explode if tank is empty? <- may be redundant?
-
+        
+        // empty current fluid tank (empties the entire multi-block fluid tank)
+        long fluidAmount = fluid.getAmount();  // get current value before emptying
+        TransferUtil.clearStorage(tank);
         
         level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
         // variable size explosion from fluid tank (capped at minecraft max, 127)
         return Optional.of(new PointExplosion(pos.getX(), pos.getY(), pos.getZ(),
-                Math.min(3 + ((float) fluid.getAmount() / 40500), 127f)));
+                Math.min(3 + ((float) fluidAmount / 40500), 127f)));
     }
 }
