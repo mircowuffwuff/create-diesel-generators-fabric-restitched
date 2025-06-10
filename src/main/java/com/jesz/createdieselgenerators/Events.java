@@ -132,8 +132,6 @@ public class Events {
      * should probably stop.
      */
     public static void onExplosion(Level level, Explosion explosion, List<Entity> entities, double v) {
-        System.out.println("> onExplosion called!");
-
         if (!ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() || level.isClientSide)
             return;
        
@@ -147,7 +145,6 @@ public class Events {
         List<PointExplosion> found = new ArrayList<>(); // collect all found targets
 
         // lazy initial search phase
-        System.out.println("> initial search starting...");
 
         for (PointOffset offset : SPHERICAL_OFFSETS) {
             Optional<PointExplosion> opt = CombustionHelper.detectAndClean(level, (int) (explosion.x + offset.dx()),
@@ -156,13 +153,11 @@ public class Events {
             if (!opt.isPresent()) {
                 continue;
             } else {
-                System.out.println("found " + opt.get());
                 found.add(opt.get());
             }
         }
 
         if (found.isEmpty()) {
-            System.out.println("> finished early, no combustibles found!");
             return;
         } else {
             // late loading to compensate for lazy initial search
@@ -171,23 +166,17 @@ public class Events {
                 processed.add(new PointCoordinate((int) (offset.dx() + explosion.x), (int) (offset.dy() + explosion.y),
                     (int) (offset.dz() + explosion.z)));
             }
-            System.out.println("processed set contains " + processed.size() + " elements");
 
-            System.out.println("search queue: ");
             toSearch = new ArrayDeque<PointCoordinate>();
             for (PointExplosion pe : found) {
-                System.out.println(pe);
                 toSearch.add(new PointCoordinate(pe));
             }
         }
     
         // search phase
-        System.out.println("> search phase starting...");
 
         while (toSearch != null && !toSearch.isEmpty()) {
             PointCoordinate center = toSearch.poll();
-            System.out.println("searching from " + center + "...");
-
 
             for (PointOffset offset : SPHERICAL_OFFSETS) {
                 PointCoordinate current = center.applyOffset(offset);
@@ -204,7 +193,6 @@ public class Events {
                 if (!opt.isPresent()) {
                     continue;
                 } else {
-                    System.out.println("found " + opt.get());
                     toSearch.add(current);
                     found.add(opt.get());
                 }
@@ -212,16 +200,11 @@ public class Events {
         }
 
         // execute phase
-        System.out.println("> execute phase starting...");
 
         for (PointExplosion pe : found) {
             // do explosion
-            System.out.println(String.format("    [%d %d %d] size %.2f explosion triggered", pe.x(), pe.y(), pe.z(), pe.explosionSize()));
             level.explode(null, pe.x(), pe.y(), pe.z(), pe.explosionSize(), true, Level.ExplosionInteraction.BLOCK);
-            System.out.println("    explosion exited!");
         }
-
-        System.out.println("> done!");
     }
 
     /*TODO

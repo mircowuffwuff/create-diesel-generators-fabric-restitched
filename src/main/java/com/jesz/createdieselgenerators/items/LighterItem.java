@@ -134,8 +134,6 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
 
     @Override
     public InteractionResult useOn(@Nonnull UseOnContext context) {
-        System.out.println("lighter used!");
-
         Player player = context.getPlayer();
         Level level = context.getLevel();
         BlockPos blockpos = context.getClickedPos();
@@ -156,10 +154,8 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
                     if (!level.isClientSide()) {
                         PointExplosion pe = opt.get();
 
-                        System.out.println("    lighter size " + (pe.explosionSize()) + " explosion triggered");
                         level.explode(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), pe.explosionSize(), true,
                                 Level.ExplosionInteraction.BLOCK);
-                        System.out.println("    ...exited!");
 
                         // reduce fluid amount in lighter
                         CompoundTag tankCompound = itemstack.getTag().getCompound("Fluid");
@@ -241,8 +237,6 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
 
     @Override
     public boolean onEntityItemUpdate(ItemStack stack, ItemEntity itemEntity) {
-        System.out.println("lighter item update?");
-
         if(itemEntity.getItem().is(ItemRegistry.LIGHTER.get()) && ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() && itemEntity.getItem().getTag() != null) {
             if(itemEntity.getItem().getTag().getInt("Type") == 2) {
                 FluidState fState = itemEntity.level().getFluidState(new BlockPos(itemEntity.getBlockX(), itemEntity.getBlockY(), itemEntity.getBlockZ()));
