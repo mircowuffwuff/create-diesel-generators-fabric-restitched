@@ -1,6 +1,8 @@
 package com.jesz.createdieselgenerators.items;
 
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
+import com.jesz.createdieselgenerators.other.CombustionHelper;
+import com.jesz.createdieselgenerators.other.CombustionHelper.PointExplosion;
 import com.jesz.createdieselgenerators.other.FuelTypeManager;
 import com.simibubi.create.AllEnchantments;
 import com.simibubi.create.content.equipment.armor.CapacityEnchantment;
@@ -46,6 +48,9 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 
 import java.util.List;
+import java.util.Optional;
+
+import javax.annotation.Nonnull;
 
 public class LighterItem extends Item implements CapacityEnchantment.ICapacityEnchantable, CustomEnchantingBehaviorItem, FluidStorageItem, EntityTickListenerItem {
     public LighterItem(Properties properties) {
@@ -128,7 +133,7 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
     }
 
     @Override
-    public InteractionResult useOn(UseOnContext context) {
+    public InteractionResult useOn(@Nonnull UseOnContext context) {
         System.out.println("lighter used!");
 
         Player player = context.getPlayer();
@@ -136,60 +141,57 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
         BlockPos blockpos = context.getClickedPos();
         BlockState blockstate = level.getBlockState(blockpos);
         ItemStack itemstack = context.getItemInHand();
-        if(itemstack.getTag() == null || itemstack.getTag().getInt("Type") != 2)
+
+        if (itemstack.getTag() == null || itemstack.getTag().getInt("Type") != 2)
             return use(context.getLevel(), context.getPlayer(), context.getHand()).getResult();
-        if (!CampfireBlock.canLight(blockstate) && !CandleBlock.canLight(blockstate) && !CandleCakeBlock.canLight(blockstate)) {
-            if(ConfigRegistry.COMBUSTIBLES_BLOW_UP.get()){
-                BlockEntity cb = level.getBlockEntity(blockpos);
-                if(cb != null) {
-                    var tank = TransferUtil.getFluidStorage(cb);
-                    var fluid = TransferUtil.getFirstFluid(tank);
-                    //IFluidHandler tank = cb.getCapability(ForgeCapabilities.FLUID_HANDLER).orElse(null);
 
-                    if (tank == null || fluid == null || fluid.isEmpty())
-                        return use(context.getLevel(), context.getPlayer(), context.getHand()).getResult();
-                    if (FuelTypeManager.getGeneratedSpeed(fluid.getFluid()) != 0) {
-                        // isolate block modification to server-side
-                        if (!level.isClientSide()) {
-                            level.setBlock(blockpos, Blocks.AIR.defaultBlockState(), 3);
-                            System.out.println("    lighter size " + (Math.min(3 + ((float) fluid.getAmount() / 40500), 127f)) + " explosion triggered");
-                            level.explode(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), Math.min(3 + ((float) fluid.getAmount() / 40500), 127f), true, Level.ExplosionInteraction.BLOCK);
-                            System.out.println("    ...exited!");
+        if (!CampfireBlock.canLight(blockstate) && !CandleBlock.canLight(blockstate)
+                && !CandleCakeBlock.canLight(blockstate)) {
+            if (ConfigRegistry.COMBUSTIBLES_BLOW_UP.get()) {
+                Optional<PointExplosion> opt = CombustionHelper.detectAndClean(level, blockpos.getX(), blockpos.getY(),
+                        blockpos.getZ());
 
-                            // lower fluid amount in lighter
-                            CompoundTag tankCompound = itemstack.getTag().getCompound("Fluid");
-                            FluidStack fStack = FluidStack.loadFluidStackFromNBT(tankCompound);
-                            if (FuelTypeManager.getGeneratedSpeed(fStack.getFluid()) != 0 && itemstack.getTag().getInt("Type") == 2) {
-                                fStack.setAmount(fStack.getAmount() - 1);
-                                fStack.writeToNBT(itemstack.getTag().getCompound("Fluid"));
-                            }
-                        } else {
-                            System.out.println("    explosion disabled (client-side)");
-                        }
-                        
+                // isolate block modification to server-side
+                if (opt.isPresent() && !level.isClientSide()) {
+                    PointExplosion pe = opt.get();
 
-                        
-                        return InteractionResult.sidedSuccess(level.isClientSide());
+                    System.out.println("    lighter size " + (pe.explosionSize()) + " explosion triggered");
+                    level.explode(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), pe.explosionSize(), true,
+                            Level.ExplosionInteraction.BLOCK);
+                    System.out.println("    ...exited!");
+
+                    // reduce fluid amount in lighter
+                    CompoundTag tankCompound = itemstack.getTag().getCompound("Fluid");
+                    FluidStack fStack = FluidStack.loadFluidStackFromNBT(tankCompound);
+                    if (FuelTypeManager.getGeneratedSpeed(fStack.getFluid()) != 0
+                            && itemstack.getTag().getInt("Type") == 2) {
+                        fStack.setAmount(fStack.getAmount() - 1);
+                        fStack.writeToNBT(itemstack.getTag().getCompound("Fluid"));
                     }
+
+                    return InteractionResult.sidedSuccess(level.isClientSide());
                 }
             }
+
             BlockPos blockpos1 = blockpos.relative(context.getClickedFace());
             if (BaseFireBlock.canBePlacedAt(level, blockpos1, context.getHorizontalDirection())) {
-                level.playSound(player, blockpos1, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.4F + 0.8F);
+                level.playSound(player, blockpos1, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F,
+                        level.getRandom().nextFloat() * 0.4F + 0.8F);
                 BlockState blockstate1 = BaseFireBlock.getState(level, blockpos1);
                 level.setBlock(blockpos1, blockstate1, 11);
                 level.gameEvent(player, GameEvent.BLOCK_PLACE, blockpos);
                 if (player instanceof ServerPlayer) {
-                    CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer)player, blockpos1, itemstack);
+                    CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer) player, blockpos1, itemstack);
                 }
                 CompoundTag tankCompound = itemstack.getTag().getCompound("Fluid");
                 FluidStack fStack = FluidStack.loadFluidStackFromNBT(tankCompound);
-                if(fStack.getAmount() == 0){
+                if (fStack.getAmount() == 0) {
                     itemstack.getTag().putInt("Type", 1);
                     return InteractionResult.FAIL;
                 }
-                if(FuelTypeManager.getGeneratedSpeed(fStack.getFluid()) != 0 && itemstack.getTag().getInt("Type") == 2){
-                    fStack.setAmount(fStack.getAmount()-1);
+                if (FuelTypeManager.getGeneratedSpeed(fStack.getFluid()) != 0
+                        && itemstack.getTag().getInt("Type") == 2) {
+                    fStack.setAmount(fStack.getAmount() - 1);
                     fStack.writeToNBT(itemstack.getTag().getCompound("Fluid"));
                 }
                 return InteractionResult.sidedSuccess(level.isClientSide());
@@ -197,7 +199,8 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
                 return use(context.getLevel(), context.getPlayer(), context.getHand()).getResult();
             }
         } else {
-            level.playSound(player, blockpos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.4F + 0.8F);
+            level.playSound(player, blockpos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F,
+                    level.getRandom().nextFloat() * 0.4F + 0.8F);
             level.setBlock(blockpos, blockstate.setValue(BlockStateProperties.LIT, Boolean.valueOf(true)), 11);
             level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockpos);
             if (player != null) {
