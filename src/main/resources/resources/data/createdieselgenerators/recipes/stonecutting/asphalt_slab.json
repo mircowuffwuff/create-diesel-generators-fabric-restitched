@@ -1,8 +1,0 @@
-{
-  "type": "minecraft:stonecutting",
-  "ingredient": {
-    "item": "createdieselgenerators:asphalt_block"
-  },
-  "result": "createdieselgenerators:asphalt_slab",
-  "count": 2
-}
