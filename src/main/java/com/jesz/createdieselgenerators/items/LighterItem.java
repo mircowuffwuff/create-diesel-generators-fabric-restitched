@@ -152,21 +152,23 @@ public class LighterItem extends Item implements CapacityEnchantment.ICapacityEn
                         blockpos.getZ());
 
                 // isolate block modification to server-side
-                if (opt.isPresent() && !level.isClientSide()) {
-                    PointExplosion pe = opt.get();
+                if (opt.isPresent()) {
+                    if (!level.isClientSide()) {
+                        PointExplosion pe = opt.get();
 
-                    System.out.println("    lighter size " + (pe.explosionSize()) + " explosion triggered");
-                    level.explode(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), pe.explosionSize(), true,
-                            Level.ExplosionInteraction.BLOCK);
-                    System.out.println("    ...exited!");
+                        System.out.println("    lighter size " + (pe.explosionSize()) + " explosion triggered");
+                        level.explode(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), pe.explosionSize(), true,
+                                Level.ExplosionInteraction.BLOCK);
+                        System.out.println("    ...exited!");
 
-                    // reduce fluid amount in lighter
-                    CompoundTag tankCompound = itemstack.getTag().getCompound("Fluid");
-                    FluidStack fStack = FluidStack.loadFluidStackFromNBT(tankCompound);
-                    if (FuelTypeManager.getGeneratedSpeed(fStack.getFluid()) != 0
-                            && itemstack.getTag().getInt("Type") == 2) {
-                        fStack.setAmount(fStack.getAmount() - 1);
-                        fStack.writeToNBT(itemstack.getTag().getCompound("Fluid"));
+                        // reduce fluid amount in lighter
+                        CompoundTag tankCompound = itemstack.getTag().getCompound("Fluid");
+                        FluidStack fStack = FluidStack.loadFluidStackFromNBT(tankCompound);
+                        if (FuelTypeManager.getGeneratedSpeed(fStack.getFluid()) != 0
+                                && itemstack.getTag().getInt("Type") == 2) {
+                            fStack.setAmount(fStack.getAmount() - 1);
+                            fStack.writeToNBT(itemstack.getTag().getCompound("Fluid"));
+                        }
                     }
 
                     return InteractionResult.sidedSuccess(level.isClientSide());
