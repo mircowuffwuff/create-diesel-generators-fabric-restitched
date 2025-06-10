@@ -1,4 +1,12 @@
 {
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "farmersdelight"
+      ]
+    }
+  ],
   "type": "createdieselgenerators:basin_fermenting",
   "ingredients": [
     {
@@ -13,12 +21,6 @@
     {
       "fluid": "createdieselgenerators:ethanol",
       "amount": 50
-    }
-  ],
-  "conditions": [
-    {
-      "type": "forge:mod_loaded",
-      "modid": "farmersdelight"
     }
   ]
 }
