@@ -85,18 +85,20 @@ public class Events {
      * 
      * The logic behind the detection algorithm is to solve two problems with the original:
      * 
-     *  1. Explosion propogation is *greedy* (propogating immediately upon the first detected target)
-     *  2. Explosion propogation is *recursive* (leading to concerning call stacks and possible stack overflows)
+     *  1. Explosion propagation is *greedy* (propagating immediately upon the first detected target)
+     *  2. Explosion propagation is *recursive* (leading to concerning call stacks and possible stack overflows)
      * 
      * To solve this, we split the the explosion search into three phases:
      * 
      *  0. Lazy initial search phase 
      *     In most cases, we expect there to be no combustibles. In this case, it is probably acceptable to save some
      *     resources by only checking the initial radius without initializing the overhead of the BFS. While this does
-     *     mean there will be slightly more work done if there is a combustible, it should be fairly negligible.
+     *     mean there will be slightly more work done to catch up if there is a combustible, the work done should be 
+     *     fairly negligible.
      *  1. Search phase (selecting all valid targets)
      *     Iteratively select all targets in a BFS, saving already searched nodes in a hashmap to prevent re-searching 
-     *     of already searched coordinates. This should prevent the overhead of recursion.
+     *     of already searched coordinates. This should prevent the overhead of recursion, since after the algorithm 
+     *     runs, there should be no valid targets of combustion for any of the triggered explosions.
      *  2. Execute phase (triggering all explosions)
      *     Execute all explosions. Ideally, there would be a way to stop these explosions from calling onExplosion as 
      *     well, but that is not currently in scope.
