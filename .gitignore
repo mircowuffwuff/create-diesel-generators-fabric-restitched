@@ -6,12 +6,13 @@ bin
 .classpath
 .project
 
-# idea
+# ide
 out
 *.ipr
 *.iws
 *.iml
 .idea
+.vscode
 
 # gradle
 build
