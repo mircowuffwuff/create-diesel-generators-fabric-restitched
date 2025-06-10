@@ -4,7 +4,6 @@ import com.jesz.createdieselgenerators.blocks.DieselGeneratorBlock;
 import com.jesz.createdieselgenerators.blocks.ICDGKinetics;
 import com.jesz.createdieselgenerators.commands.CDGCommands;
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
-import com.jesz.createdieselgenerators.items.ItemRegistry;
 import com.jesz.createdieselgenerators.other.CombustionHelper;
 import com.jesz.createdieselgenerators.other.CombustionHelper.*;
 import com.jesz.createdieselgenerators.other.FuelTypeManager;
@@ -15,46 +14,24 @@ import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Components;
 import com.simibubi.create.foundation.utility.Lang;
-import com.simibubi.create.infrastructure.command.ConfigCommand;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CKinetics;
-import io.github.fabricators_of_create.porting_lib.event.common.ExplosionEvents;
 import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.BucketItemAccessor;
-import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
-import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import io.github.tropheusj.milk.Milk;
-import io.github.tropheusj.milk.MilkFluid;
-import io.github.tropheusj.milk.MilkFluidBlock;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.npc.VillagerProfession;
-import net.minecraft.world.entity.npc.VillagerTrades;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Fluids;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -228,6 +205,7 @@ public class Events {
         if((item instanceof BucketItem || item instanceof MilkBucketItem) && ConfigRegistry.FUEL_TOOLTIPS.get()){
 
             Fluid fluid = Milk.STILL_MILK.getSource();
+            // gonna be honest. i have no idea what this is supposed to do.
             if(item instanceof BucketItem bi)
                 fluid = fluid = ((BucketItemAccessor) item).port_lib$getContent();
 

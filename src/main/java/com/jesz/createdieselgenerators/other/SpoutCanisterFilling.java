@@ -22,7 +22,7 @@ public class SpoutCanisterFilling extends BlockSpoutingBehaviour {
         if(!ConfigRegistry.CANISTER_SPOUT_FILLING.get())
             return 0;
         BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity instanceof CanisterBlockEntity be){
+        if (blockEntity instanceof @SuppressWarnings("unused") CanisterBlockEntity _be){
             Storage<FluidVariant> handler = TransferUtil.getFluidStorage(level, pos, blockEntity, Direction.UP);
             //IFluidHandler handler = blockEntity.getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.UP).orElse(null);
             long amount = availableFluid.getAmount();
