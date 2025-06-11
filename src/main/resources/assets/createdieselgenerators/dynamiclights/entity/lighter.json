@@ -1,0 +1,24 @@
+{
+  "match": {
+    "type": "minecraft:player",
+    "equipment": {
+      "mainhand": {
+        "items": [
+          "createdieselgenerators:lighter"
+        ],
+        "nbt": "{Type:2}"
+      },
+      "offhand": {
+        "items": [
+          "createdieselgenerators:lighter"
+        ],
+        "nbt": "{Type:2}"
+      }
+    }
+  },
+  "luminance": {
+    "type": "lambdynamiclights:water_sensitive",
+    "out_of_water": 14,
+    "in_water": 8
+  }
+}
