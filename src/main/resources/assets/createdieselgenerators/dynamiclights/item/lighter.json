@@ -1,0 +1,8 @@
+{
+  "match": {
+    "items": ["createdieselgenerators:lighter"],
+    "nbt": "{Type:2}"
+  },
+  "luminance": 14,
+	"water_sensitive": true
+}
