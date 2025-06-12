@@ -2,7 +2,7 @@
   "match": {
     "type": "minecraft:player",
     "equipment": {
-      "mainhand": {
+      "offhand": {
         "items": ["createdieselgenerators:lighter"],
         "nbt": "{Type:2}"
       }
