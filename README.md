@@ -51,6 +51,12 @@ This mod is a ⋆⁺₊restitched⁺₊⋆ version of <a href="https://modrinth.
   <tr>
     <td><a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/issues/26">#26</a> ponder scenes having a duplicate of themselves as their next scene</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/pull/42">#42</a> exploding combustibles causing lag, crashes and being inappropriately scaled</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/issues/23">#23</a> engine silencers lacking a crafting recipe</td>
+  </tr>
 </table>
 
 <table>
@@ -59,6 +65,9 @@ This mod is a ⋆⁺₊restitched⁺₊⋆ version of <a href="https://modrinth.
   </tr>
   <tr>
     <td>using fuels like diesel to smelt items in the furnace, enabling compat for<br><a href="https://modrinth.com/mod/immersive-aircraft">Immersive Aircraft</a>, <a href="https://modrinth.com/mod/create-steam-n-rails">Create: Steam 'n' Rails</a> and probably more</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/issues/12">#12</a> <a href="https://modrinth.com/mod/lambdynamiclights">LambDynamicLights</a> compat, allowing lit lighters to emit dynamic light</td>
   </tr>
 </table>
 
