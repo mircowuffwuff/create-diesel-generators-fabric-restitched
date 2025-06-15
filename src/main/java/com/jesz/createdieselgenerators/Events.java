@@ -4,7 +4,8 @@ import com.jesz.createdieselgenerators.blocks.DieselGeneratorBlock;
 import com.jesz.createdieselgenerators.blocks.ICDGKinetics;
 import com.jesz.createdieselgenerators.commands.CDGCommands;
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
-import com.jesz.createdieselgenerators.items.ItemRegistry;
+import com.jesz.createdieselgenerators.other.CombustionHelper;
+import com.jesz.createdieselgenerators.other.CombustionHelper.*;
 import com.jesz.createdieselgenerators.other.FuelTypeManager;
 import com.jozufozu.flywheel.util.AnimationTickHolder;
 import com.mojang.brigadier.CommandDispatcher;
@@ -13,49 +14,33 @@ import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Components;
 import com.simibubi.create.foundation.utility.Lang;
-import com.simibubi.create.infrastructure.command.ConfigCommand;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CKinetics;
-import io.github.fabricators_of_create.porting_lib.event.common.ExplosionEvents;
 import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.BucketItemAccessor;
-import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
-import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import io.github.tropheusj.milk.Milk;
-import io.github.tropheusj.milk.MilkFluid;
-import io.github.tropheusj.milk.MilkFluidBlock;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.npc.VillagerProfession;
-import net.minecraft.world.entity.npc.VillagerTrades;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Fluids;
-
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
 
 public class Events {
 
@@ -70,42 +55,135 @@ public class Events {
     }
      */
 
-    public static void onExplosion(Level level, Explosion explosion, List<Entity> entities, double v) {
-        if(ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() && !level.isClientSide)
-            for (int x = -2; x < 2; x++) {
-                for (int y = -2; y < 2; y++) {
-                    for (int z = -2; z < 2; z++) {
-                        BlockPos pos = new BlockPos((int) (x + explosion.x), (int) (y + explosion.y), (int) (z + explosion.z));
+    /**
+     * Pre-calculating the sphere offsets should be slightly more efficient than the previous cube scanning method. 
+     * It also allows the search to begin from the inside out, which likely does not offer any additional benefit.
+     */
+    public static final List<PointOffset> SPHERICAL_OFFSETS;
+    static {
+        final int radius = 2;  // functionally 2.5
+        final int radiusSq = 6;  // 2.5 * 2.5
 
-                        if (!level.isInWorldBounds(pos)) continue;
-                        if(Math.abs(Math.sqrt(x*x+y*y+z*z)) < 2) {
-                            FluidState fluidState = level.getFluidState(pos);
-
-                            if (FuelTypeManager.getGeneratedSpeed(fluidState.getType()) != 0) {
-                                level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                                try {
-                                    level.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(), 3, true, Level.ExplosionInteraction.BLOCK);
-                                }catch (StackOverflowError ignored){}
-                            }
-                            BlockEntity be = level.getBlockEntity(pos);
-                            if(be == null)
-                                continue;
-                            var tank = TransferUtil.getFluidStorage(be);
-                            if(tank == null)
-                                continue;
-
-                            FluidStack fluid = TransferUtil.getFirstFluid(tank);
-
-                            if(FuelTypeManager.getGeneratedSpeed(fluid.getFluid()) == 0)
-                                continue;
-                            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                            try {
-                                level.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(), 3 + ((float) fluid.getAmount() / 500), true, Level.ExplosionInteraction.BLOCK);
-                            }catch (StackOverflowError ignored){}
-                        }
+        SPHERICAL_OFFSETS = new ArrayList<>();
+        // precalculate all points that satisfy x*x + y*y + z*z >= radiusSq
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (dx * dx + dy * dy + dz * dz < radiusSq) {
+                        SPHERICAL_OFFSETS.add(new PointOffset(dx, dy, dz));
                     }
                 }
             }
+        }
+
+        // sort from inside out (from 0, 0, 0)
+        SPHERICAL_OFFSETS.sort(Comparator.comparingInt(p -> p.dx() * p.dx() + p.dy() * p.dy() + p.dz() * p.dz()));
+    }
+
+    /**
+     * Detects combustible blocks (fluid tanks, etc.) and triggers an explosion on them scaling with the amount of fuel.
+     * 
+     * The logic behind the detection algorithm is to solve two problems with the original:
+     * 
+     *  1. Explosion propagation is *greedy* (propagating immediately upon the first detected target)
+     *  2. Explosion propagation is *recursive* (leading to concerning call stacks and possible stack overflows)
+     * 
+     * To solve this, we split the the explosion search into three phases:
+     * 
+     *  0. Lazy initial search phase 
+     *     In most cases, we expect there to be no combustibles. In this case, it is probably acceptable to save some
+     *     resources by only checking the initial radius without initializing the overhead of the BFS. While this does
+     *     mean there will be slightly more work done to catch up if there is a combustible, the work done should be 
+     *     fairly negligible.
+     *  1. Search phase (selecting all valid targets)
+     *     Iteratively select all targets in a BFS, saving already searched nodes in a hashmap to prevent re-searching 
+     *     of already searched coordinates. This should prevent the overhead of recursion, since after the algorithm 
+     *     runs, there should be no valid targets of combustion for any of the triggered explosions.
+     *  2. Execute phase (triggering all explosions)
+     *     Execute all explosions. Ideally, there would be a way to stop these explosions from calling onExplosion as 
+     *     well, but that is not currently in scope.
+     * 
+     * The main benefit of this function is that while it can't stop recursive calls, it should prevent them from 
+     * occurring during normal gameplay by selecting and removing all possible targets of recursion. 
+     * One drawback is that if somehow the function is repeatedly called recursively, it would lead to more lag than the 
+     * original due to the increased overhead. This should not happen in normal gameplay, though. I'm not sure what 
+     * would cause more liquid tanks to appear in the same tick after the search is executed, but whatever's doing that 
+     * should probably stop.
+     */
+    public static void onExplosion(Level level, Explosion explosion, List<Entity> entities, double v) {
+        if (!ConfigRegistry.COMBUSTIBLES_BLOW_UP.get() || level.isClientSide)
+            return;
+       
+        /**
+         * Using PointCoordinate over BlockPos should be better, since PointCoordinate should be faster to initialize.
+         * Each instance of BlockPos is only used to check if the block is combustible, and due to the BFS design, 
+         * BlockPos instances are never reused, so storing them doesn't make much sense. 
+         */
+        Queue<PointCoordinate> toSearch = null; // lazy init
+        Set<PointCoordinate> processed = null;  // lazy init
+        List<PointExplosion> found = new ArrayList<>(); // collect all found targets
+
+        // lazy initial search phase
+
+        for (PointOffset offset : SPHERICAL_OFFSETS) {
+            Optional<PointExplosion> opt = CombustionHelper.detectAndClean(level, (int) (explosion.x + offset.dx()),
+                    (int) (explosion.y + offset.dy()), (int) (explosion.z + offset.dz()));
+
+            if (!opt.isPresent()) {
+                continue;
+            } else {
+                found.add(opt.get());
+            }
+        }
+
+        if (found.isEmpty()) {
+            return;
+        } else {
+            // late loading to compensate for lazy initial search
+            processed = new HashSet<PointCoordinate>();
+            for (PointOffset offset : SPHERICAL_OFFSETS) {
+                processed.add(new PointCoordinate((int) (offset.dx() + explosion.x), (int) (offset.dy() + explosion.y),
+                    (int) (offset.dz() + explosion.z)));
+            }
+
+            toSearch = new ArrayDeque<PointCoordinate>();
+            for (PointExplosion pe : found) {
+                toSearch.add(new PointCoordinate(pe));
+            }
+        }
+    
+        // search phase
+
+        while (toSearch != null && !toSearch.isEmpty()) {
+            PointCoordinate center = toSearch.poll();
+
+            for (PointOffset offset : SPHERICAL_OFFSETS) {
+                PointCoordinate current = center.applyOffset(offset);
+
+                // continue if already processed
+                if (processed.contains(current))
+                    continue;
+                else {
+                    processed.add(current);
+                }
+
+                Optional<PointExplosion> opt = CombustionHelper.detectAndClean(level, current);
+
+                if (!opt.isPresent()) {
+                    continue;
+                } else {
+                    toSearch.add(current);
+                    found.add(opt.get());
+                }
+            }
+        }
+
+        // execute phase
+
+        for (PointExplosion pe : found) {
+            // do explosion
+            level.explode(null, pe.x(), pe.y(), pe.z(), pe.explosionSize(), true, Level.ExplosionInteraction.BLOCK);
+        }
     }
 
     /*TODO
@@ -129,6 +207,7 @@ public class Events {
         if((item instanceof BucketItem || item instanceof MilkBucketItem) && ConfigRegistry.FUEL_TOOLTIPS.get()){
 
             Fluid fluid = Milk.STILL_MILK.getSource();
+            // gonna be honest. i have no idea what this is supposed to do.
             if(item instanceof BucketItem bi)
                 fluid = fluid = ((BucketItemAccessor) item).port_lib$getContent();
 

@@ -1,8 +1,6 @@
 package com.jesz.createdieselgenerators.fluids;
 
-import com.jesz.createdieselgenerators.CreativeTab;
 import com.jesz.createdieselgenerators.TagRegistry;
-import com.simibubi.create.AllFluids;
 import com.simibubi.create.AllTags;
 import com.tterrag.registrate.util.entry.FluidEntry;
 import com.tterrag.registrate.fabric.SimpleFlowableFluid;
@@ -14,7 +12,6 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 
@@ -160,6 +157,7 @@ public class FluidRegistry {
             this(Component.translatable(key), viscosity, density <= 0);
         }
 
+        @SuppressWarnings("unused")
         public CreateAttributeHandler(String key) {
             this(key, FluidConstants.WATER_VISCOSITY, 1000);
         }
