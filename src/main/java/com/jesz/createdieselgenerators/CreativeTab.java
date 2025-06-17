@@ -5,60 +5,63 @@ import com.jesz.createdieselgenerators.fluids.FluidRegistry;
 import com.jesz.createdieselgenerators.items.ItemRegistry;
 import com.simibubi.create.foundation.utility.Components;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 
+/**
+ * rewritten using <a href="https://github.com/davioliva16/create-aquatic-ambitions/pull/10/files#diff-676ca02226dc30d2db262abc5c5a66d457c8c45a0080268f5a6cd7532485bd17">this snippet</a> by <a href="https://github.com/ninjaguardian">ninjaguardian</a> as a template.
+ * thank you ninjaguardian!
+ */
 public class CreativeTab {
 
-    public static void register(){
-        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, "main", BASE_CREATIVE_TAB);
-        ItemGroupEvents.MODIFY_ENTRIES_ALL.register(CreativeTab::make);
+    public static final CreativeModeTab CDG_CREATIVE_TAB = Registry.register(
+            BuiltInRegistries.CREATIVE_MODE_TAB,
+            new ResourceLocation(CreateDieselGenerators.ID, "s"), /*i dont have a clue what this s does here, but it works*/
+            FabricItemGroup.builder()
+                    .title(Components.translatable("itemGroup.cdg_creative_tab"))
+                    .icon(() -> new ItemStack(BlockRegistry.DIESEL_ENGINE))
+                    .displayItems(((itemDisplayParameters, output) -> {
+                        output.accept(ItemRegistry.ENGINE_PISTON);
+                        output.accept(ItemRegistry.ENGINE_SILENCER);
+                        output.accept(ItemRegistry.ENGINE_TURBO);
+                        output.accept(BlockRegistry.DIESEL_ENGINE);
+                        output.accept(BlockRegistry.MODULAR_DIESEL_ENGINE);
+                        output.accept(BlockRegistry.HUGE_DIESEL_ENGINE);
+                        output.accept(ItemRegistry.DISTILLATION_CONTROLLER);
+                        output.accept(ItemRegistry.OIL_SCANNER);
+                        output.accept(BlockRegistry.PUMPJACK_BEARING);
+                        output.accept(BlockRegistry.PUMPJACK_CRANK);
+                        output.accept(BlockRegistry.PUMPJACK_HEAD);
+                        output.accept(BlockRegistry.PUMPJACK_HOLE);
+                        output.accept(ItemRegistry.WOOD_CHIPS);
+                        output.accept(BlockRegistry.CHIP_WOOD_BEAM);
+                        output.accept(BlockRegistry.CHIP_WOOD_BLOCK);
+                        output.accept(BlockRegistry.CHIP_WOOD_STAIRS);
+                        output.accept(BlockRegistry.CHIP_WOOD_SLAB);
+                        output.accept(BlockRegistry.CANISTER);
+                        output.accept(BlockRegistry.OIL_BARREL);
+                        output.accept(BlockRegistry.BASIN_LID);
+                        output.accept(BlockRegistry.ASPHALT_BLOCK);
+                        output.accept(BlockRegistry.ASPHALT_STAIRS);
+                        output.accept(BlockRegistry.ASPHALT_SLAB);
+                        output.accept(FluidRegistry.CRUDE_OIL.get().getBucket());
+                        output.accept(FluidRegistry.BIODIESEL.get().getBucket());
+                        output.accept(FluidRegistry.DIESEL.get().getBucket());
+                        output.accept(FluidRegistry.GASOLINE.get().getBucket());
+                        output.accept(FluidRegistry.PLANT_OIL.get().getBucket());
+                        output.accept(FluidRegistry.ETHANOL.get().getBucket());
+                        output.accept(ItemRegistry.KELP_HANDLE);
+                        output.accept(ItemRegistry.LIGHTER);
+                        output.accept(ItemRegistry.CHEMICAL_SPRAYER);
+                        output.accept(ItemRegistry.CHEMICAL_SPRAYER_LIGHTER);
+                    }))
+                    .build()
+    );
+
+    public static void registerItemGroups() {
+        CreateDieselGenerators.LOGGER.info("Registering Item Groups for " + CreateDieselGenerators.ID);
     }
-
-    private static void make(CreativeModeTab creativeModeTab, FabricItemGroupEntries entries) {
-        if (creativeModeTab == BASE_CREATIVE_TAB) {
-
-            entries.accept(ItemRegistry.ENGINE_PISTON);
-            entries.accept(ItemRegistry.ENGINE_SILENCER);
-            entries.accept(ItemRegistry.ENGINE_TURBO);
-            entries.accept(BlockRegistry.DIESEL_ENGINE);
-            entries.accept(BlockRegistry.MODULAR_DIESEL_ENGINE);
-            entries.accept(BlockRegistry.HUGE_DIESEL_ENGINE);
-            entries.accept(ItemRegistry.DISTILLATION_CONTROLLER);
-            entries.accept(ItemRegistry.OIL_SCANNER);
-            entries.accept(BlockRegistry.PUMPJACK_BEARING);
-            entries.accept(BlockRegistry.PUMPJACK_CRANK);
-            entries.accept(BlockRegistry.PUMPJACK_HEAD);
-            entries.accept(BlockRegistry.PUMPJACK_HOLE);
-            entries.accept(ItemRegistry.WOOD_CHIPS);
-            entries.accept(BlockRegistry.CHIP_WOOD_BEAM);
-            entries.accept(BlockRegistry.CHIP_WOOD_BLOCK);
-            entries.accept(BlockRegistry.CHIP_WOOD_STAIRS);
-            entries.accept(BlockRegistry.CHIP_WOOD_SLAB);
-            entries.accept(BlockRegistry.CANISTER);
-            entries.accept(BlockRegistry.OIL_BARREL);
-            entries.accept(BlockRegistry.BASIN_LID);
-            entries.accept(BlockRegistry.ASPHALT_BLOCK);
-            entries.accept(BlockRegistry.ASPHALT_STAIRS);
-            entries.accept(BlockRegistry.ASPHALT_SLAB);
-            entries.accept(FluidRegistry.CRUDE_OIL.get().getBucket());
-            entries.accept(FluidRegistry.BIODIESEL.get().getBucket());
-            entries.accept(FluidRegistry.DIESEL.get().getBucket());
-            entries.accept(FluidRegistry.GASOLINE.get().getBucket());
-            entries.accept(FluidRegistry.PLANT_OIL.get().getBucket());
-            entries.accept(FluidRegistry.ETHANOL.get().getBucket());
-            entries.accept(ItemRegistry.KELP_HANDLE);
-            entries.accept(ItemRegistry.LIGHTER);
-            entries.accept(ItemRegistry.CHEMICAL_SPRAYER);
-            entries.accept(ItemRegistry.CHEMICAL_SPRAYER_LIGHTER);
-        }
-    }
-
-    public static final CreativeModeTab BASE_CREATIVE_TAB = FabricItemGroup.builder()
-                    .title(Components.translatable("itemGroup.create.base"))
-                    .icon(BlockRegistry.DIESEL_ENGINE::asStack)
-                    .build();
 }

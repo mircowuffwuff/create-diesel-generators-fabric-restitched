@@ -13,7 +13,6 @@ import com.jesz.createdieselgenerators.other.FuelTypeManager;
 import com.jesz.createdieselgenerators.other.SpoutCanisterFilling;
 import com.jesz.createdieselgenerators.recipes.RecipeRegistry;
 import com.jesz.createdieselgenerators.sounds.SoundRegistry;
-import com.simibubi.create.AllCreativeModeTabs;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.api.behaviour.BlockSpoutingBehaviour;
 import com.simibubi.create.compat.Mods;
@@ -26,23 +25,24 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.fml.config.ModConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Random;
 
 public class CreateDieselGenerators implements ModInitializer {
     public static final CreateRegistrate REGISTRATE = CreateRegistrate.create("createdieselgenerators");
     public static final String ID = "createdieselgenerators";
+    public static final String NAME = "Create: Diesel Generators";
+    public static final Logger LOGGER = LoggerFactory.getLogger(NAME);
 
 
     public static ResourceLocation asResource(String path) {
@@ -60,7 +60,7 @@ public class CreateDieselGenerators implements ModInitializer {
         EntityRegistry.register();
         SoundRegistry.register();
         RecipeRegistry.register();
-        CreativeTab.register();
+        CreativeTab.registerItemGroups();
 
         REGISTRATE.register();
 
