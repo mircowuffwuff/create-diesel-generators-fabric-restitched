@@ -9,7 +9,7 @@
       "item": "create:andesite_alloy"
     },
     "I": {
-      "item": "create:iron_sheet"
+      "tag": "c:iron_plates"
     },
     "C": {
       "item": "minecraft:clock"

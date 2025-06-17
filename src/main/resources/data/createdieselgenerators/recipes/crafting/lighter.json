@@ -13,10 +13,10 @@
       "item": "minecraft:flint_and_steel"
     },
     "S": {
-      "item": "create:brass_sheet"
+      "tag": "c:brass_plates"
     },
     "W": {
-      "item": "minecraft:string"
+      "tag": "c:string"
     }
   },
   "result": {

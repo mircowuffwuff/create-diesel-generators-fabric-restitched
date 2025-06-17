@@ -13,7 +13,7 @@
       "item": "create:shaft"
     },
     "Z": {
-      "item": "create:zinc_nugget"
+      "tag": "c:zinc_nuggets"
     }
   },
   "result": {

@@ -10,10 +10,10 @@
       "item": "create:steam_engine"
     },
     "B": {
-      "item": "create:brass_block"
+      "tag": "c:brass_blocks"
     },
     "S": {
-      "item": "create:brass_sheet"
+      "tag": "c:brass_plates"
     },
     "F": {
       "item": "minecraft:flint_and_steel"

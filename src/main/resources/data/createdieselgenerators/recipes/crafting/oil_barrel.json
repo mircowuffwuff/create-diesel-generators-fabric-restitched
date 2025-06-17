@@ -8,7 +8,7 @@
       "item": "minecraft:barrel"
     },
     "S": {
-      "item": "create:iron_sheet"
+      "tag": "c:iron_plates"
     }
   },
   "result": {

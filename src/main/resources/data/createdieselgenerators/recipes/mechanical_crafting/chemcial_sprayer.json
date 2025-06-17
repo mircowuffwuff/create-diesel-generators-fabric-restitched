@@ -12,7 +12,7 @@
       "item": "create:fluid_pipe"
     },
     "C": {
-      "item": "minecraft:copper_block"
+      "tag": "c:copper_blocks"
     },
     "H": {
       "item": "createdieselgenerators:kelp_handle"
