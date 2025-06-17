@@ -170,6 +170,9 @@ public class HugeDieselEngineBlockEntity extends SmartBlockEntity implements IHa
     @Nullable
     @Override
     public Storage<FluidVariant> getFluidStorage(@Nullable Direction face) {
+        if(face == null)
+            return null;
+
         if (getBlockState().getValue(BooleanProperty.create(face.toString())))
             if(face.getAxis() != getBlockState().getValue(FACING).getAxis())
                 return tank.getCapability();
