@@ -35,5 +35,12 @@
   "createdieselgenerators.display_source.engine_status": "發動機狀態",
   "createdieselgenerators.display_source.speed": "旋轉速度 : ",
   "createdieselgenerators.display_source.stress": "動力 : ",
-  "createdieselgenerators.display_source.idle": "閒置"
+  "createdieselgenerators.display_source.idle": "閒置",
+
+  "block.createdieselgenerators.plant_oil": "植物油",
+  "block.createdieselgenerators.crude_oil": "原油",
+  "block.createdieselgenerators.biodiesel": "生物柴油",
+  "block.createdieselgenerators.ethanol": "乙醇",
+  "block.createdieselgenerators.diesel": "柴油",
+  "block.createdieselgenerators.gasoline": "汽油"
 }
