@@ -74,4 +74,7 @@ This mod is a ⋆⁺₊restitched⁺₊⋆ version of <a href="https://modrinth.
 <p align="center">If you want to help fix the remaining known <a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/issues">issues</a> of the mod, feel free to <a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/compare">create a pull request</a>!!<br>
 
 <!--<p align="center">Every gameplay-breaking issue is already fixed. Feel free to <a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/issues">report any issue</a> or <a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/compare">create a pull request</a> if you want to help mature the mod!!<br>-->
+
+<!--todo how to build/contribute section-->
+<!--todo thanks section mentioning george378925, mrsterner, bugord, alt-potato, ninjaguardian-->
 </p>
