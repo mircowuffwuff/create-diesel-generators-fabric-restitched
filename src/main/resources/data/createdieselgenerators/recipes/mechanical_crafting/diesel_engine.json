@@ -14,13 +14,13 @@
       "item": "minecraft:flint_and_steel"
     },
     "G": {
-      "item": "create:brass_block"
+      "tag": "c:brass_blocks"
     },
     "B": {
       "tag": "c:brass_plates"
     },
     "O": {
-      "item": "create:sturdy_sheet"
+      "tag": "c:obsidian_plates"
     },
     "S": {
       "item": "create:fluid_pipe"

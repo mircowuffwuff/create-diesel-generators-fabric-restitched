@@ -2,7 +2,7 @@
   "type": "createdieselgenerators:basin_fermenting",
   "ingredients": [
     {
-      "item": "create:wheat_flour"
+      "tag": "c:wheat_flour"
     },
     {
       "fluid": "minecraft:water",

@@ -10,7 +10,7 @@
       "item": "create:andesite_alloy"
     },
     "S": {
-      "item": "create:iron_sheet"
+      "tag": "c:iron_plates"
     },
     "I": {
       "item": "iron_ingot"

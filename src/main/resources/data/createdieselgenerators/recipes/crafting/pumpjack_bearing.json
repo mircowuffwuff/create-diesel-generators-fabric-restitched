@@ -10,7 +10,7 @@
       "item": "create:andesite_alloy"
     },
     "Z": {
-      "item": "create:zinc_ingot"
+      "tag": "c:zinc_ingots"
     },
     "B": {
       "item": "create:mechanical_bearing"
