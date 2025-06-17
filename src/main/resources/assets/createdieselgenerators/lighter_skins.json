@@ -46,53 +46,5 @@
   {
     "name": "obsidian",
     "id": "obsidian"
-  },
-  {
-    "name": "sussy lighter",
-    "id": "sussy"
-  },
-  {
-    "name": "fire lighter",
-    "id": "fire"
-  },
-  {
-    "name": "heavier lighter",
-    "id": "heavier"
-  },
-  {
-    "name": "willows lighter",
-    "id": "willows"
-  },
-  {
-    "name": "soul lighter",
-    "id": "soul"
-  },
-  {
-    "name": "creeper lighter",
-    "id": "creeper"
-  },
-  {
-    "name": "titanium lighter",
-    "id": "titanium"
-  },
-  {
-    "name": "arc lighter",
-    "id": "arc"
-  },
-  {
-    "name": "glass lighter",
-    "id": "glass"
-  },
-  {
-    "name": "diamond lighter",
-    "id": "diamond"
-  },
-  {
-    "name": "dragon lighter",
-    "id": "dragon"
-  },
-  {
-    "name": "obsidian lighter",
-    "id": "obsidian"
   }
 ]

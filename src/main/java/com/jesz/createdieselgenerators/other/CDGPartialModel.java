@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// seemingly not used anywhere anymore, might as well remove?
 public class CDGPartialModel {
 
     private static final List<CDGPartialModel> ALL = new ArrayList<>();
