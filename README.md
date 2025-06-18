@@ -60,9 +60,11 @@ This mod is a ⋆⁺₊restitched⁺₊⋆ version of <a href="https://modrinth.
   <tr>
     <td><a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/issues/45">#45</a> the game crashing with <a href="https://modrinth.com/mod/create-aquatic-ambitions">Create: Aquatic Ambitions</a> also installed</td>
   </tr>
+  <!--
   <tr>
     <td><a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/issues/31">#31</a> the game crashing whenever resources were reloaded by changing resourcepacks, hitting F3+T or toggling shaders, among others</td>
   </tr>
+  -->
   <tr>
     <td><a href="https://github.com/mircey/create-diesel-generators-fabric-restitched/issues/32">#32</a> fluids lacking translations in chinese, japanese and partially taiwanese</td>
   </tr>
