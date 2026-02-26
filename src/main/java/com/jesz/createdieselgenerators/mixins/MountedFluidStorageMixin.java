@@ -3,7 +3,7 @@ package com.jesz.createdieselgenerators.mixins;
 import com.jesz.createdieselgenerators.blocks.entity.OilBarrelBlockEntity;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.simibubi.create.content.contraptions.MountedFluidStorage;
+import com.simibubi.create.api.contraption.storage.fluid.MountedFluidStorage;
 import com.simibubi.create.content.contraptions.MountedStorageManager;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 

@@ -1,7 +1,7 @@
 package com.jesz.createdieselgenerators.world;
 
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
-import com.simibubi.create.foundation.utility.NBTHelper;
+import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;

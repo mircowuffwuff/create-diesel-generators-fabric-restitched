@@ -12,7 +12,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOptionBehaviour;
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.simibubi.create.foundation.utility.Lang;
+import com.simibubi.create.foundation.utility.CreateLang;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
@@ -90,7 +90,7 @@ public class DieselGeneratorBlockEntity extends GeneratingKineticBlockEntity imp
         behaviours.add(computerBehaviour = CCProxy.behaviour(this));
 
         movementDirection = new ScrollOptionBehaviour<>(WindmillBearingBlockEntity.RotationDirection.class,
-                Lang.translateDirect("contraptions.windmill.rotation_direction"), this, new DieselGeneratorValueBox());
+                CreateLang.translateDirect("contraptions.windmill.rotation_direction"), this, new DieselGeneratorValueBox());
         movementDirection.withCallback($ -> onDirectionChanged());
 
         behaviours.add(movementDirection);

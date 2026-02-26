@@ -5,11 +5,12 @@ import com.jesz.createdieselgenerators.config.ConfigRegistry;
 import com.jesz.createdieselgenerators.recipes.DistillationRecipe;
 import com.jesz.createdieselgenerators.recipes.RecipeRegistry;
 import com.simibubi.create.api.connectivity.ConnectivityHandler;
-import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.fluids.tank.BoilerHeaters;
 import com.simibubi.create.content.fluids.tank.FluidTankBlock;
 import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import com.simibubi.create.content.processing.basin.BasinBlockEntity;
+import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.processing.basin.BasinRecipe;
 import com.simibubi.create.content.processing.recipe.HeatCondition;
 import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
@@ -18,10 +19,11 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
-import com.simibubi.create.foundation.utility.animation.LerpedFloat;
+import com.simibubi.create.infrastructure.config.AllConfigs;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
+import net.createmod.catnip.animation.LerpedFloat;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributeHandler;
@@ -49,7 +51,7 @@ import java.util.stream.Stream;
 
 public class DistillationTankBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Fluid, IHaveGoggleInformation, SidedStorageBlockEntity {
     private static final int MAX_SIZE = 3;
-//FluidTankBlockEntity
+    //FluidTankBlockEntity
     public float progress;
     public int heat;
     //protected LazyOptional<IFluidHandler> fluidCapability;
@@ -73,7 +75,8 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
 
     // For rendering purposes only
     private LerpedFloat fluidLevel;
-    public boolean hasDistillationC;
+
+    BlazeBurnerBlock.HeatLevel highestHeatLevel = BlazeBurnerBlock.HeatLevel.NONE;
 
     public DistillationTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -87,11 +90,11 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
         refreshCapability();
     }
 
-    private BlockPos getBottomControllerPos(){
-        if(isBottom())
+    private BlockPos getBottomControllerPos() {
+        if (isBottom())
             return getController();
 
-        if(level.getBlockEntity(getBlockPos().below()) instanceof DistillationTankBlockEntity be){
+        if (level.getBlockEntity(getBlockPos().below()) instanceof DistillationTankBlockEntity be) {
             return be.getBottomControllerPos();
         }
         return getController();
@@ -101,20 +104,20 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
         return new SmartFluidTank(getCapacityMultiplier(), this::onFluidStackChanged);
     }
 
-    public int getTemperature() {
+    public BlazeBurnerBlock.HeatLevel getHeat() {
         int width = getControllerBE().width;
-        int heatN = 0;
-        if(getController() == null || width == 0)
-            return 0;
+        BlazeBurnerBlock.HeatLevel highestHeat = BlazeBurnerBlock.HeatLevel.NONE;
+
         for (int xOffset = 0; xOffset < width; xOffset++) {
             for (int zOffset = 0; zOffset < width; zOffset++) {
                 BlockPos pos = getController().offset(xOffset, -1, zOffset);
                 BlockState blockState = level.getBlockState(pos);
-                float heat = BoilerHeaters.getActiveHeat(level, pos, blockState);
-                heatN += (int) heat;
+                BlazeBurnerBlock.HeatLevel heat = BasinBlockEntity.getHeatLevelOf(blockState);
+                if (!highestHeat.isAtLeast(heat))
+                    highestHeat = heat;
             }
         }
-        return Mth.clamp(heatN/(width*width), 0, 100);
+        return highestHeat;
     }
 
     public void updateConnectivity() {
@@ -127,37 +130,36 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
     }
 
 
-
-    private void startProcessing(){
-        if(currentRecipe == null)
+    private void startProcessing() {
+        if (currentRecipe == null)
             return;
         processingTime = (currentRecipe.getProcessingDuration());
-        if(!level.isClientSide)
+        if (!level.isClientSide)
             sendData();
     }
 
     @Override
     public void tick() {
         bottomCPos = getBottomControllerPos();
-        if(isController() && isBottom()){
-            if(processingTime > -1 && currentRecipe != null){
+        if (isController() && isBottom()) {
+            if (processingTime > -1 && currentRecipe != null) {
                 boolean canFill = true;
-                for (int i = 0; i < currentRecipe.getFluidResults().size()*ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get(); i++) {
-                    if(level.getBlockEntity(getBlockPos().above(i+1)) instanceof DistillationTankBlockEntity be){
-                        if(be.getControllerBE().width != getControllerBE().width) {
+                for (int i = 0; i < currentRecipe.getFluidResults().size() * ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get(); i++) {
+                    if (level.getBlockEntity(getBlockPos().above(i + 1)) instanceof DistillationTankBlockEntity be) {
+                        if (be.getControllerBE().width != getControllerBE().width) {
                             canFill = false;
                             break;
                         }
-                        if(!(i % ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() == 0 && be.getTank(0).getFluidAmount() <= getCapacityMultiplier() * width * width - (currentRecipe.getFluidResults().get(i / ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get()).getAmount()))) {
+                        if (!(i % ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() == 0 && be.getTank(0).getFluidAmount() <= getCapacityMultiplier() * width * width - (currentRecipe.getFluidResults().get(i / ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get()).getAmount()))) {
                             canFill = false;
                             break;
                         }
-                    }else{
+                    } else {
                         canFill = false;
                         break;
                     }
                 }
-                if(canFill)
+                if (canFill)
                     processingTime -= Mth.clamp(ConfigRegistry.DISTILLATION_WIDE_TANK_FASTER.get() ? (width * width) : 1, 1, processingTime);
                 if (!(tankInventory.getFluid().getAmount() >= currentRecipe.getFluidIngredients().get(0).getRequiredAmount() && getHeat(currentRecipe.getRequiredHeat()) <= heat)) {
                     currentRecipe = null;
@@ -166,21 +168,21 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
 
                 }
             }
-            if(processingTime == 0 && currentRecipe != null){
-                if(tankInventory.getFluid().getAmount() >= currentRecipe.getFluidIngredients().get(0).getRequiredAmount()  && getHeat(currentRecipe.getRequiredHeat()) <= heat){
+            if (processingTime == 0 && currentRecipe != null) {
+                if (tankInventory.getFluid().getAmount() >= currentRecipe.getFluidIngredients().get(0).getRequiredAmount() && getHeat(currentRecipe.getRequiredHeat()) <= heat) {
                     TransferUtil.extractAnyFluid(tankInventory, currentRecipe.getFluidIngredients().get(0).getRequiredAmount());
                     //tankInventory.drain(currentRecipe.getFluidIngredients().get(0).getRequiredAmount(), IFluidHandler.FluidAction.EXECUTE);
-                    if(currentRecipe != null) {
-                        for (int i = 0; i < currentRecipe.getFluidResults().size()*ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get(); i++) {
-                            if(level.getBlockEntity(getBlockPos().above(i+1)) instanceof DistillationTankBlockEntity be){
-                                if(be.getControllerBE().width != getControllerBE().width)
+                    if (currentRecipe != null) {
+                        for (int i = 0; i < currentRecipe.getFluidResults().size() * ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get(); i++) {
+                            if (level.getBlockEntity(getBlockPos().above(i + 1)) instanceof DistillationTankBlockEntity be) {
+                                if (be.getControllerBE().width != getControllerBE().width)
                                     break;
-                                if(i % ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() == 0) {
+                                if (i % ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() == 0) {
                                     //be.tankInventory.fill(currentRecipe.getFluidResults().get(i/ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get()), IFluidHandler.FluidAction.EXECUTE);
-                                    TransferUtil.insertFluid(be.tankInventory, currentRecipe.getFluidResults().get(i/ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get()));
+                                    TransferUtil.insertFluid(be.tankInventory, currentRecipe.getFluidResults().get(i / ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get()));
                                 }
 
-                            }else{
+                            } else {
                                 break;
                             }
                         }
@@ -192,8 +194,8 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
                 onFluidStackChanged(tankInventory.getFluid());
             }
 
-            if(currentRecipe == null || (width != 0 && currentRecipe.getProcessingDuration() != 0)) // safety / zero
-                progress = currentRecipe != null ? (float)processingTime / ((float) currentRecipe.getProcessingDuration() /(width*width)) : 0;
+            if (currentRecipe == null || (width != 0 && currentRecipe.getProcessingDuration() != 0)) // safety / zero
+                progress = currentRecipe != null ? (float) processingTime / ((float) currentRecipe.getProcessingDuration() / (width * width)) : 0;
         }
 
         super.tick();
@@ -233,7 +235,7 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
         List<Recipe<?>> r = getMatchingRecipes();
         if (!r.isEmpty()) {
             currentRecipe = (DistillationRecipe) r.get(0);
-            if(processingTime <= 0)
+            if (processingTime <= 0)
                 startProcessing();
         }
         sendData();
@@ -246,8 +248,9 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
         removeController(true);
         lastKnownPos = worldPosition;
     }
+
     protected List<Recipe<?>> getMatchingRecipes() {
-        List<Recipe<?>> list = RecipeFinder.get( new Object(), level, recipe -> recipe.getType() == RecipeRegistry.DISTILLATION.getType());
+        List<Recipe<?>> list = RecipeFinder.get(new Object(), level, recipe -> recipe.getType() == RecipeRegistry.DISTILLATION.getType());
 
         Stream<Recipe<?>> list1 = list.stream().filter(r -> !((DistillationRecipe) r).getFluidIngredients().isEmpty());
         Stream<Recipe<?>> list2 = list1.filter(r -> (((DistillationRecipe) r).getFluidIngredients().get(0).getMatchingFluidStacks().contains(tankInventory.getFluid())));
@@ -257,10 +260,11 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
         return list4;
 
     }
-    int getHeat(HeatCondition heatCondition){
-        if(heatCondition == HeatCondition.SUPERHEATED)
+
+    int getHeat(HeatCondition heatCondition) {
+        if (heatCondition == HeatCondition.SUPERHEATED)
             return 2;
-        if(heatCondition == HeatCondition.HEATED)
+        if (heatCondition == HeatCondition.HEATED)
             return 1;
         return 0;
     }
@@ -268,7 +272,7 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
     protected void onFluidStackChanged(FluidStack newFluidStack) {
         if (!hasLevel())
             return;
-        if(processingTime <= -1) {
+        if (processingTime <= -1) {
             List<Recipe<?>> r = getMatchingRecipes();
             if (!r.isEmpty()) {
                 currentRecipe = (DistillationRecipe) r.get(0);
@@ -387,8 +391,8 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
     }
 
     public void setWindows(boolean window) {
-        if(window && ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() != 1)
-            if((getBottomControllerPos().getY() + 1 - worldPosition.getY()) % ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() != 0)
+        if (window && ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() != 1)
+            if ((getBottomControllerPos().getY() + 1 - worldPosition.getY()) % ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() != 0)
                 return;
 
         this.window = window;
@@ -459,8 +463,8 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        if(ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() != 1)
-            if((getBottomControllerPos().getY() + 1 - worldPosition.getY()) % ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() != 0)
+        if (ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() != 1)
+            if ((getBottomControllerPos().getY() + 1 - worldPosition.getY()) % ConfigRegistry.DISTILLATION_LEVEL_HEIGHT.get() != 0)
                 return false;
         DistillationTankBlockEntity controllerBE = getControllerBE();
         if (controllerBE == null)
@@ -472,8 +476,6 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
     @Override
     protected void read(CompoundTag compound, boolean clientPacket) {
         super.read(compound, clientPacket);
-
-        hasDistillationC = compound.getBoolean("HasDistillationC");
 
         BlockPos controllerBefore = controller;
         int prevSize = width;
@@ -538,15 +540,17 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
         List<Recipe<?>> r = getMatchingRecipes();
         if (!r.isEmpty()) {
             currentRecipe = (DistillationRecipe) r.get(0);
-            if(processingTime <= 0)
+            if (processingTime <= 0)
                 startProcessing();
-        }}
+        }
+    }
+
     public float getFillState() {
         return (float) tankInventory.getFluidAmount() / tankInventory.getCapacity();
     }
+
     @Override
     public void write(CompoundTag compound, boolean clientPacket) {
-        compound.putBoolean("HasDistillationC", hasDistillationC);
         if (updateConnectivity)
             compound.putBoolean("Uninitialized", true);
         if (lastKnownPos != null)
@@ -577,14 +581,17 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
     public void invalidate() {
         super.invalidate();
     }
+
     @Override
-    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {}
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+    }
+
     public int getTotalTankSize() {
         return width * width;
     }
 
-    public static long getCapacityMultiplier() {
-        return FluidConstants.BUCKET * 8;
+    public static int getCapacityMultiplier() {
+        return AllConfigs.server().fluids.fluidTankCapacity.get() * 1000;
     }
 
     public LerpedFloat getFluidLevel() {
@@ -611,29 +618,14 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
     }
 
     private boolean getBottomConnectivity() {
-        if((level.getBlockEntity(getBlockPos().below()) instanceof DistillationTankBlockEntity be)) {
-            DistillationTankBlockEntity otherControllerBE = be.getControllerBE();
-            if(otherControllerBE != null) {
-                DistillationTankBlockEntity controllerBE = getControllerBE();
-                if(controllerBE != null)
-                    if(controllerBE.getBlockPos().below().equals(otherControllerBE.getBlockPos()))
-                        return controllerBE.getWidth() != otherControllerBE.getWidth();
-
-            }
-        }
+        if ((level.getBlockEntity(getBlockPos().below()) instanceof DistillationTankBlockEntity be))
+            return !isSameMultiBlock(be);
         return true;
     }
-    private boolean getTopConnectivity() {
-        if((level.getBlockEntity(getBlockPos().above()) instanceof DistillationTankBlockEntity be)) {
-            DistillationTankBlockEntity otherControllerBE = be.getControllerBE();
-            if(otherControllerBE != null) {
-                DistillationTankBlockEntity controllerBE = getControllerBE();
-                if(controllerBE != null)
-                    if(controllerBE.getBlockPos().above().equals(otherControllerBE.getBlockPos()))
-                        return controllerBE.getWidth() != otherControllerBE.getWidth();
 
-            }
-        }
+    private boolean getTopConnectivity() {
+        if ((level.getBlockEntity(getBlockPos().above()) instanceof DistillationTankBlockEntity be))
+            return !isSameMultiBlock(be);
         return true;
     }
 
@@ -665,9 +657,9 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
 
     @Override
     public int getMaxLength(Direction.Axis longAxis, int width) {
-            if (longAxis == Direction.Axis.Y)
-                return 1;
-            return getMaxWidth();
+        if (longAxis == Direction.Axis.Y)
+            return 1;
+        return getMaxWidth();
     }
 
     @Override
@@ -721,49 +713,57 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
                 .copy();
     }
 
-    @Nullable
-    @Override
-    public Storage<FluidVariant> getFluidStorage(@Nullable Direction direction) {
-        if (exposedTank == null)
-            refreshCapability();
-        return exposedTank;
-    }
-
     public void updateVerticalMulti() {
         BlockState state = this.getBlockState();
         if (DistillationTankBlock.isTank(state)) { // safety
             state = state.setValue(DistillationTankBlock.BOTTOM, getBottomConnectivity());
             state = state.setValue(DistillationTankBlock.TOP, getTopConnectivity());
-            if(state != this.getBlockState())
+            if (state != this.getBlockState())
                 level.setBlock(getBlockPos(), state, 3);
         }
-        if(level.getBlockEntity(getBlockPos().below()) instanceof DistillationTankBlockEntity be)
+        if (level.getBlockEntity(getBlockPos().below()) instanceof DistillationTankBlockEntity be)
             be.updateVerticalMulti();
     }
 
     public boolean isBottom() {
-        return !(level.getBlockEntity(getBlockPos().below()) instanceof DistillationTankBlockEntity be && be.getWidth() == getWidth());
+        return !(level.getBlockEntity(getBlockPos().below()) instanceof DistillationTankBlockEntity be && isSameMultiBlock(be));
+    }
+
+    void checkForRecipes() {
+        if (processingTime <= -1) {
+            List<Recipe<?>> r = getMatchingRecipes();
+            if (!r.isEmpty()) {
+                currentRecipe = (DistillationRecipe) r.get(0);
+                startProcessing();
+            } else {
+                currentRecipe = null;
+            }
+        }
+    }
+
+    private boolean isSameMultiBlock(DistillationTankBlockEntity be) {
+        DistillationTankBlockEntity otherControllerBE = be.getControllerBE();
+        DistillationTankBlockEntity controllerBE = getControllerBE();
+        if (otherControllerBE == null || controllerBE == null)
+            return false;
+        if (otherControllerBE == controllerBE)
+            return true;
+        if (otherControllerBE.getBlockPos().getX() == controllerBE.getBlockPos().getX() && otherControllerBE.getBlockPos().getZ() == controllerBE.getBlockPos().getZ())
+            return otherControllerBE.width == controllerBE.width;
+        return false;
     }
 
     public void updateTemperature() {
-        if(!isBottom())
+        if (!isBottom())
             return;
-        if(isController()){
-            heat = getTemperature();
+        if (isController()) {
+            highestHeatLevel = getHeat();
             sendData();
-            if(processingTime <= -1) {
-                List<Recipe<?>> r = getMatchingRecipes();
-                if (!r.isEmpty()) {
-                    currentRecipe = (DistillationRecipe) r.get(0);
-                    startProcessing();
-                } else {
-                    currentRecipe = null;
-                }
-            }
+            checkForRecipes();
             return;
         }
         DistillationTankBlockEntity be = getControllerBE();
-        if(be == null)
+        if (be == null)
             return;
         be.updateTemperature();
     }

@@ -3,15 +3,16 @@ package com.jesz.createdieselgenerators.blocks.renderer;
 import com.jesz.createdieselgenerators.PartialModels;
 import com.jesz.createdieselgenerators.blocks.entity.HugeDieselEngineBlockEntity;
 import com.jesz.createdieselgenerators.blocks.entity.PoweredEngineShaftBlockEntity;
-import com.jozufozu.flywheel.backend.Backend;
-import com.jozufozu.flywheel.core.PartialModel;
+import dev.engine_room.flywheel.api.backend.Backend;
+import dev.engine_room.flywheel.lib.model.baked.PartialModel;
+import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer;
-import com.simibubi.create.foundation.render.CachedBufferer;
-import com.simibubi.create.foundation.render.SuperByteBuffer;
-import com.simibubi.create.foundation.utility.AngleHelper;
+import net.createmod.catnip.render.CachedBuffers;
+import net.createmod.catnip.render.SuperByteBuffer;
+import net.createmod.catnip.math.AngleHelper;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -28,7 +29,7 @@ public class HugeDieselEngineRenderer extends SafeBlockEntityRenderer<HugeDiesel
 
     @Override
     protected void renderSafe(HugeDieselEngineBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource bufferSource, int light, int overlay) {
-        if (Backend.canUseInstancing(be.getLevel()))
+        if (VisualizationManager.supportsVisualization(be.getLevel()))
             return;
         Float angle = be.getTargetAngle();
         VertexConsumer vb = bufferSource.getBuffer(RenderType.solid());
@@ -70,31 +71,31 @@ public class HugeDieselEngineRenderer extends SafeBlockEntityRenderer<HugeDiesel
                 .renderInto(ms, vb);
 
         transformed(PartialModels.ENGINE_PISTON_LINKAGE, state, facing, roll90)
-                .centre()
+                .center()
                 .translate(0, 1, 0)
-                .unCentre()
+                .uncenter()
                 .translate(0, piston, 0)
                 .translate(0, 4 / 16f, 8 / 16f)
-                .rotateX(sine2 * 23f)
+                .rotateXDegrees(sine2 * 23f)
                 .translate(0, -4 / 16f, -8 / 16f)
                 .light(light)
                 .renderInto(ms, vb);
         if(shaft.isEngineForConnectorDisplay(be.getBlockPos()))
             transformed(PartialModels.ENGINE_PISTON_CONNECTOR, state, facing, roll90)
                     .translate(0, 2, 0)
-                    .centre()
-                    .rotateXRadians(-angle + Mth.HALF_PI)
-                    .unCentre()
+                    .center()
+                    .rotateX(-angle + Mth.HALF_PI)
+                    .uncenter()
                     .light(light)
                     .renderInto(ms, vb);
     }
     private SuperByteBuffer transformed(PartialModel model, BlockState blockState, Direction facing, boolean roll90) {
-        return CachedBufferer.partial(model, blockState)
-                .centre()
-                .rotateY(AngleHelper.horizontalAngle(facing))
-                .rotateX(AngleHelper.verticalAngle(facing) + 90)
-                .rotateY(roll90 ? -90 : 0)
-                .unCentre();
+        return CachedBuffers.partial(model, blockState)
+                .center()
+                .rotateYDegrees(AngleHelper.horizontalAngle(facing))
+                .rotateXDegrees(AngleHelper.verticalAngle(facing) + 90)
+                .rotateYDegrees(roll90 ? -90 : 0)
+                .uncenter();
     }
     @Override
     public int getViewDistance() {

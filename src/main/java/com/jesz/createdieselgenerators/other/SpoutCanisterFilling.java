@@ -2,7 +2,7 @@ package com.jesz.createdieselgenerators.other;
 
 import com.jesz.createdieselgenerators.blocks.entity.CanisterBlockEntity;
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
-import com.simibubi.create.api.behaviour.BlockSpoutingBehaviour;
+import com.simibubi.create.api.behaviour.spouting.BlockSpoutingBehaviour;
 import com.simibubi.create.content.fluids.spout.SpoutBlockEntity;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
@@ -15,7 +15,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-public class SpoutCanisterFilling extends BlockSpoutingBehaviour {
+public class SpoutCanisterFilling implements BlockSpoutingBehaviour {
 
     @Override
     public long fillBlock(Level level, BlockPos pos, SpoutBlockEntity spout, FluidStack availableFluid, boolean simulate) {

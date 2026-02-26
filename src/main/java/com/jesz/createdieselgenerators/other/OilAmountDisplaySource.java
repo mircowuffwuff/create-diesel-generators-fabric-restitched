@@ -2,10 +2,10 @@ package com.jesz.createdieselgenerators.other;
 
 import com.jesz.createdieselgenerators.blocks.entity.PumpjackHoleBlockEntity;
 import com.simibubi.create.content.redstone.displayLink.DisplayLinkContext;
-import com.simibubi.create.content.redstone.displayLink.source.DisplaySource;
+import com.simibubi.create.api.behaviour.display.DisplaySource;
 import com.simibubi.create.content.redstone.displayLink.target.DisplayTargetStats;
-import com.simibubi.create.foundation.utility.Components;
-import com.simibubi.create.foundation.utility.Lang;
+import com.simibubi.create.foundation.utility.CreateLang;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 import java.util.List;
@@ -16,8 +16,8 @@ public class OilAmountDisplaySource extends DisplaySource {
     public List<MutableComponent> provideText(DisplayLinkContext context, DisplayTargetStats stats) {
         if(context.getSourceBlockEntity() instanceof PumpjackHoleBlockEntity sourceBE) {
             return List.of(
-                    Components.translatable("createdieselgenerators.display_source.pumpjack_hole_source").append(" : "),
-                    Lang.number(sourceBE.oilAmount).add(Lang.translate("generic.unit.buckets")).component()
+                    Component.translatable("createdieselgenerators.display_source.pumpjack_hole_source").append(" : "),
+                    CreateLang.number(sourceBE.oilAmount).add(CreateLang.translate("generic.unit.buckets")).component()
             );
 
         }

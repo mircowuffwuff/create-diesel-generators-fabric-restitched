@@ -5,12 +5,13 @@ import com.jesz.createdieselgenerators.blocks.entity.DieselGeneratorBlockEntity;
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
 import com.jesz.createdieselgenerators.items.ItemRegistry;
 import com.simibubi.create.api.connectivity.ConnectivityHandler;
+import com.simibubi.create.api.schematic.requirement.SpecialBlockItemRequirement;
+import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.content.fluids.tank.CreativeFluidTankBlockEntity;
 import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import com.simibubi.create.content.fluids.transfer.GenericItemEmptying;
 import com.simibubi.create.content.fluids.transfer.GenericItemFilling;
 import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
-import com.simibubi.create.content.schematics.requirement.ISpecialBlockItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
@@ -69,7 +70,7 @@ import static com.jesz.createdieselgenerators.items.ItemRegistry.ENGINE_TURBO;
 import static net.minecraft.core.Direction.NORTH;
 import static net.minecraft.core.Direction.SOUTH;
 
-public class DieselGeneratorBlock extends DirectionalKineticBlock implements ISpecialBlockItemRequirement, IBE<DieselGeneratorBlockEntity>, ProperWaterloggedBlock, ICDGKinetics {
+public class DieselGeneratorBlock extends DirectionalKineticBlock implements SpecialBlockItemRequirement, IBE<DieselGeneratorBlockEntity>, ProperWaterloggedBlock, ICDGKinetics {
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
@@ -113,7 +114,7 @@ public class DieselGeneratorBlock extends DirectionalKineticBlock implements ISp
                 if (!context.getPlayer().isCreative())
                     context.getPlayer().getInventory().placeItemBackInInventory(ENGINE_SILENCER.asStack());
                 context.getLevel().setBlock(context.getClickedPos(), state.setValue(SILENCED, false), 3);
-                playRotateSound(context.getLevel(), context.getClickedPos());
+                IWrenchable.playRotateSound(context.getLevel(), context.getClickedPos());
                 return InteractionResult.SUCCESS;
             }
         if(state.getValue(TURBOCHARGED))
@@ -121,7 +122,7 @@ public class DieselGeneratorBlock extends DirectionalKineticBlock implements ISp
                 if (!context.getPlayer().isCreative())
                     context.getPlayer().getInventory().placeItemBackInInventory(ENGINE_TURBO.asStack());
                 context.getLevel().setBlock(context.getClickedPos(), state.setValue(TURBOCHARGED, false), 3);
-                playRotateSound(context.getLevel(), context.getClickedPos());
+                IWrenchable.playRotateSound(context.getLevel(), context.getClickedPos());
                 return InteractionResult.SUCCESS;
             }
 
@@ -186,14 +187,14 @@ public class DieselGeneratorBlock extends DirectionalKineticBlock implements ISp
             if(!player.isCreative())
                 itemInHand.shrink(1);
             level.setBlock(pos, state.setValue(SILENCED, true), 3);
-            playRotateSound(level, pos);
+            IWrenchable.playRotateSound(level, pos);
             return InteractionResult.SUCCESS;
         }
         if(ENGINE_TURBO.isIn(itemInHand) && !state.getValue(TURBOCHARGED) && !state.getValue(SILENCED)) {
             if(!player.isCreative())
                 itemInHand.shrink(1);
             level.setBlock(pos, state.setValue(TURBOCHARGED, true), 3);
-            playRotateSound(level, pos);
+            IWrenchable.playRotateSound(level, pos);
             return InteractionResult.SUCCESS;
         }
         if(!ConfigRegistry.ENGINES_FILLED_WITH_ITEMS.get())

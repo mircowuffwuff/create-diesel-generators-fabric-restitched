@@ -1,6 +1,7 @@
 package com.jesz.createdieselgenerators.blocks;
 
 import com.jesz.createdieselgenerators.CreativeTab;
+import com.jesz.createdieselgenerators.CDGDisplaySources;
 import com.jesz.createdieselgenerators.blocks.ct.DistillationTankModel;
 import com.jesz.createdieselgenerators.blocks.ct.ModularDieselEngineCTBehavior;
 import com.jesz.createdieselgenerators.blocks.ct.OilBarrelCTBehavior;
@@ -11,6 +12,7 @@ import com.jesz.createdieselgenerators.items.CanisterBlockItem;
 import com.jesz.createdieselgenerators.items.MultiBlockContainerBlockItem;
 import com.jesz.createdieselgenerators.other.EngineStateDisplaySource;
 import com.jesz.createdieselgenerators.other.OilAmountDisplaySource;
+import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.SharedProperties;
 import com.tterrag.registrate.util.entry.BlockEntry;
@@ -19,8 +21,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 
 import static com.jesz.createdieselgenerators.CreateDieselGenerators.REGISTRATE;
-import static com.simibubi.create.AllMovementBehaviours.movementBehaviour;
-import static com.simibubi.create.content.redstone.displayLink.AllDisplayBehaviours.assignDataBehaviour;
+import static com.simibubi.create.api.behaviour.display.DisplaySource.displaySource;
 import static com.simibubi.create.foundation.data.CreateRegistrate.connectedTextures;
 import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
 import static com.simibubi.create.foundation.data.TagGen.pickaxeOnly;
@@ -30,26 +31,26 @@ public class BlockRegistry {
     public static final BlockEntry<DieselGeneratorBlock> DIESEL_ENGINE = REGISTRATE.block("diesel_engine", DieselGeneratorBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_YELLOW))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
-            .onRegister(assignDataBehaviour(new EngineStateDisplaySource()))
+            //.onRegister(assignDataBehaviour(new EngineStateDisplaySource()))
             .properties(p -> p.noOcclusion())
             .properties(p -> p.strength(3f))
-            .onRegister(movementBehaviour(new DieselEngineMovementBehaviour()))
+            .onRegister(MovementBehaviour.movementBehaviour(new DieselEngineMovementBehaviour()))
             .simpleItem()
             .register();
     public static final BlockEntry<LargeDieselGeneratorBlock> MODULAR_DIESEL_ENGINE = REGISTRATE.block("large_diesel_engine", LargeDieselGeneratorBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_YELLOW))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
-            .onRegister(assignDataBehaviour(new EngineStateDisplaySource()))
+            //.onRegister(assignDataBehaviour(new EngineStateDisplaySource()))
             .properties(p -> p.noOcclusion())
             .properties(p -> p.strength(3f))
             .onRegister(connectedTextures(ModularDieselEngineCTBehavior::new))
-            .onRegister(movementBehaviour(new DieselEngineMovementBehaviour()))
+            .onRegister(MovementBehaviour.movementBehaviour(new DieselEngineMovementBehaviour()))
             .simpleItem()
             .register();
     public static final BlockEntry<HugeDieselEngineBlock> HUGE_DIESEL_ENGINE = REGISTRATE.block("huge_diesel_engine", HugeDieselEngineBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_YELLOW))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
-            .onRegister(assignDataBehaviour(new EngineStateDisplaySource()))
+            //.onRegister(assignDataBehaviour(new EngineStateDisplaySource()))
             .properties(p -> p.noOcclusion())
             .properties(p -> p.strength(3f))
             .simpleItem()
@@ -79,7 +80,7 @@ public class BlockRegistry {
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
             .properties(p -> p.noOcclusion())
             .properties(p -> p.strength(3f))
-            .onRegister(movementBehaviour(new PumpjackHeadMovementBehaviour()))
+            .onRegister(MovementBehaviour.movementBehaviour(new PumpjackHeadMovementBehaviour()))
             .simpleItem()
             .register();
     public static final BlockEntry<PumpjackBearingBBlock> PUMPJACK_BEARING_B = REGISTRATE.block("pumpjack_bearing_b", PumpjackBearingBBlock::new)
@@ -87,12 +88,12 @@ public class BlockRegistry {
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
             .properties(p -> p.noOcclusion())
             .properties(p -> p.strength(3f))
-            .onRegister(movementBehaviour(new PumpjackBearingBMovementBehaviour()))
+            .onRegister(MovementBehaviour.movementBehaviour(new PumpjackBearingBMovementBehaviour()))
             .register();
     public static final BlockEntry<PumpjackHoleBlock> PUMPJACK_HOLE = REGISTRATE.block("pumpjack_hole", PumpjackHoleBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_ORANGE))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
-            .onRegister(assignDataBehaviour(new OilAmountDisplaySource()))
+            .transform(displaySource(CDGDisplaySources.OIL_AMOUNT))
             .properties(p -> p.noOcclusion())
             .properties(p -> p.strength(3f))
             .simpleItem()

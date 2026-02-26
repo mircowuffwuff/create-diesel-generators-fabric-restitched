@@ -5,6 +5,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.INamedIconOptions;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOptionBehaviour;
 import com.simibubi.create.foundation.gui.AllIcons;
+import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -17,6 +18,7 @@ import net.minecraft.world.phys.Vec3;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+
 public class PumpjackCrankBlockEntity extends KineticBlockEntity {
     public float angle = 0;
     public float prevAngle = 0;
@@ -24,7 +26,7 @@ public class PumpjackCrankBlockEntity extends KineticBlockEntity {
     public float prevBearingAngle;
     public BlockPos bearingPos;
     public WeakReference<PumpjackBearingBlockEntity> bearing = new WeakReference<>(null);
-
+    public float inPonderAngle = Integer.MIN_VALUE;
     public PumpjackCrankBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
     }
@@ -67,7 +69,7 @@ public class PumpjackCrankBlockEntity extends KineticBlockEntity {
 
     @Override
     public float calculateStressApplied() {
-        float impact = (float) 16;
+        float impact = 16f;
         this.lastStressApplied = impact;
         return impact;
     }
@@ -86,7 +88,6 @@ public class PumpjackCrankBlockEntity extends KineticBlockEntity {
     protected AABB createRenderBoundingBox() {
         return super.createRenderBoundingBox().inflate(3);
     }
-
 
     @Override
     public void tick() {
@@ -131,7 +132,7 @@ public class PumpjackCrankBlockEntity extends KineticBlockEntity {
 
         @Override
         public String getTranslationKey() {
-            return "tooltip.capacityProvided."+ (icon == AllIcons.I_CLEAR ? "low" : "high");
+            return "createdieselgenerators.tooltip.crank." + Lang.asId(name());
         }
     }
 }

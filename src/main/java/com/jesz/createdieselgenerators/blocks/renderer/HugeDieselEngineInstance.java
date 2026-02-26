@@ -1,37 +1,46 @@
 package com.jesz.createdieselgenerators.blocks.renderer;
 
 import com.jesz.createdieselgenerators.PartialModels;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.jesz.createdieselgenerators.blocks.entity.HugeDieselEngineBlockEntity;
 import com.jesz.createdieselgenerators.blocks.entity.PoweredEngineShaftBlockEntity;
-import com.jozufozu.flywheel.api.MaterialManager;
-import com.jozufozu.flywheel.api.instance.DynamicInstance;
-import com.jozufozu.flywheel.backend.instancing.blockentity.BlockEntityInstance;
-import com.jozufozu.flywheel.core.materials.model.ModelData;
-import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
-import com.simibubi.create.foundation.utility.AngleHelper;
+import dev.engine_room.flywheel.api.instance.Instance;
+import dev.engine_room.flywheel.api.visual.DynamicVisual;
+import dev.engine_room.flywheel.api.visualization.VisualizationContext;
+import dev.engine_room.flywheel.lib.instance.InstanceTypes;
+import dev.engine_room.flywheel.lib.instance.TransformedInstance;
+import dev.engine_room.flywheel.lib.model.Models;
+import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
+import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
+import net.createmod.catnip.math.AngleHelper;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Random;
+import java.util.function.Consumer;
+
 import static com.jesz.createdieselgenerators.blocks.HugeDieselEngineBlock.FACING;
 
-public class HugeDieselEngineInstance extends BlockEntityInstance<HugeDieselEngineBlockEntity> implements DynamicInstance {
-    protected final ModelData piston;
-    protected final ModelData connector;
-    protected final ModelData linkage;
+public class HugeDieselEngineInstance extends AbstractBlockEntityVisual<HugeDieselEngineBlockEntity> implements SimpleDynamicVisual {
+    protected final TransformedInstance piston;
+    protected final TransformedInstance connector;
+    protected final TransformedInstance linkage;
 
-    public HugeDieselEngineInstance(MaterialManager materialManager, HugeDieselEngineBlockEntity blockEntity) {
-        super(materialManager, blockEntity);
-        piston = getTransformMaterial().getModel(PartialModels.ENGINE_PISTON)
+    public HugeDieselEngineInstance(VisualizationContext context, HugeDieselEngineBlockEntity blockEntity, float pt) {
+        super(context, blockEntity, pt);
+        piston = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(PartialModels.ENGINE_PISTON))
                 .createInstance();
-        connector = getTransformMaterial().getModel(PartialModels.ENGINE_PISTON_CONNECTOR)
+        connector = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(PartialModels.ENGINE_PISTON_CONNECTOR))
                 .createInstance();
-        linkage = getTransformMaterial().getModel(PartialModels.ENGINE_PISTON_LINKAGE)
+        linkage = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(PartialModels.ENGINE_PISTON_LINKAGE))
                 .createInstance();
     }
 
     @Override
-    public void beginFrame() {
+    public void beginFrame(DynamicVisual.Context ctx) {
         Float angle = blockEntity.getTargetAngle();
         BlockState state = blockEntity.getBlockState();
         Direction facing = state.getValue(FACING);
@@ -39,8 +48,9 @@ public class HugeDieselEngineInstance extends BlockEntityInstance<HugeDieselEngi
         if (angle == null){
             transformed(piston, facing, false)
                     .translate(0, 0.53475, 0);
-            linkage.setEmptyTransform();
-            connector.setEmptyTransform();
+            linkage.setZeroTransform().setChanged();
+            connector.setZeroTransform().setChanged();
+            piston.setChanged();
             return;
         }
 
@@ -49,8 +59,9 @@ public class HugeDieselEngineInstance extends BlockEntityInstance<HugeDieselEngi
         if(shaft == null){
             transformed(piston, facing, false)
                     .translate(0, 0.53475, 0);
-            linkage.setEmptyTransform();
-            connector.setEmptyTransform();
+            linkage.setZeroTransform().setChanged();
+            connector.setZeroTransform().setChanged();
+            piston.setChanged();
             return;
         }
         Direction.Axis axis = KineticBlockEntityRenderer.getRotationAxisOf(shaft);
@@ -69,41 +80,47 @@ public class HugeDieselEngineInstance extends BlockEntityInstance<HugeDieselEngi
                 .translate(0, pistonOffset, 0);
 
         transformed(linkage, facing, roll90)
-                .centre()
+                .center()
                 .translate(0, 1, 0)
-                .unCentre()
+                .uncenter()
                 .translate(0, pistonOffset, 0)
                 .translate(0, 4 / 16f, 8 / 16f)
-                .rotateX(sine2 * 23f)
+                .rotateXDegrees(sine2 * 23f)
                 .translate(0, -4 / 16f, -8 / 16f);
         if(shaft.isEngineForConnectorDisplay(blockEntity.getBlockPos()))
             transformed(connector, facing, roll90)
                     .translate(0, 2, 0)
-                    .centre()
-                    .rotateXRadians(-angle + Mth.HALF_PI - (facingAxis.isVertical() ? Math.PI : 0))
-                    .unCentre();
+                    .center()
+                    .rotateX((float) (-angle + Mth.HALF_PI - (facingAxis.isVertical() ? Math.PI : 0)))
+                    .uncenter();
         else
-            connector.setEmptyTransform();
+            connector.setZeroTransform();
     }
-    protected ModelData transformed(ModelData modelData, Direction facing, boolean roll90) {
-        return modelData.loadIdentity()
-                .translate(getInstancePosition())
-                .centre()
-                .rotateY(AngleHelper.horizontalAngle(facing))
-                .rotateX(AngleHelper.verticalAngle(facing) + 90)
-                .rotateY(roll90 ? -90 : 0)
-                .unCentre();
-    }
-
-    @Override
-    public void updateLight() {
-        relight(pos, piston, connector, linkage);
+    protected TransformedInstance transformed(TransformedInstance modelData, Direction facing, boolean roll90) {
+        return modelData.setIdentityTransform()
+                .translate(getVisualPosition())
+                .center()
+                .rotateYDegrees(AngleHelper.horizontalAngle(facing))
+                .rotateXDegrees(AngleHelper.verticalAngle(facing) + 90)
+                .rotateYDegrees(roll90 ? -90 : 0)
+                .uncenter();
     }
 
-    @Override
-    protected void remove() {
-        piston.delete();
-        linkage.delete();
-        connector.delete();
+        @Override
+        public void collectCrumblingInstances(Consumer<@Nullable Instance> consumer) {
+            consumer.accept(piston);
+            consumer.accept(linkage);
+            consumer.accept(connector);
+        }
+
+        @Override
+        public void updateLight(float partialTick) {
+            relight(piston, linkage, connector);
+        }
+        @Override
+        protected void _delete() {
+            piston.delete();
+            linkage.delete();
+            connector.delete();
+        }
     }
-}

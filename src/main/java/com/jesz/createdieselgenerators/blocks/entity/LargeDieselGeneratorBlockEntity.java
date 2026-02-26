@@ -11,7 +11,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOptionBehaviour;
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.simibubi.create.foundation.utility.Lang;
+import com.simibubi.create.foundation.utility.CreateLang;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
@@ -95,7 +95,7 @@ public class LargeDieselGeneratorBlockEntity extends GeneratingKineticBlockEntit
         behaviours.add(computerBehaviour = CCProxy.behaviour(this));
 
         movementDirection = new ScrollOptionBehaviour<>(WindmillBearingBlockEntity.RotationDirection.class,
-                Lang.translateDirect("contraptions.windmill.rotation_direction"), this, new LargeDieselGeneratorValueBox());
+                CreateLang.translateDirect("contraptions.windmill.rotation_direction"), this, new LargeDieselGeneratorValueBox());
         movementDirection.withCallback($ -> onDirectionChanged(true));
 
         behaviours.add(movementDirection);
@@ -186,19 +186,19 @@ public class LargeDieselGeneratorBlockEntity extends GeneratingKineticBlockEntit
         if (Mth.equal(stressBase, 0))
             return added;
         if(frontEngine != this){
-            Lang.translate("gui.goggles.generator_stats")
+            CreateLang.translate("gui.goggles.generator_stats")
                     .forGoggles(tooltip);
-            Lang.translate("tooltip.capacityProvided")
+            CreateLang.translate("tooltip.capacityProvided")
                     .style(ChatFormatting.GRAY)
                     .forGoggles(tooltip);
 
             float stressTotal = Math.abs(frontEngine.getGeneratedSpeed()* stressBase);
 
-            Lang.number(stressTotal)
+            CreateLang.number(stressTotal)
                     .translate("generic.unit.stress")
                     .style(ChatFormatting.AQUA)
                     .space()
-                    .add(Lang.translate("gui.goggles.at_current_speed")
+                    .add(CreateLang.translate("gui.goggles.at_current_speed")
                             .style(ChatFormatting.DARK_GRAY))
                     .forGoggles(tooltip, 1);
 

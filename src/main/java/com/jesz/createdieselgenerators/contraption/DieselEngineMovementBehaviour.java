@@ -2,7 +2,7 @@ package com.jesz.createdieselgenerators.contraption;
 
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
 import com.jesz.createdieselgenerators.sounds.SoundRegistry;
-import com.simibubi.create.content.contraptions.behaviour.MovementBehaviour;
+import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import com.simibubi.create.content.trains.entity.CarriageContraption;
 import com.simibubi.create.content.trains.entity.CarriageContraptionEntity;
@@ -15,11 +15,6 @@ public class DieselEngineMovementBehaviour implements MovementBehaviour {
     @Override
     public boolean isActive(MovementContext context) {
         return context.contraption instanceof CarriageContraption && MovementBehaviour.super.isActive(context);
-    }
-
-    @Override
-    public boolean renderAsNormalBlockEntity() {
-        return true;
     }
 
     @Override

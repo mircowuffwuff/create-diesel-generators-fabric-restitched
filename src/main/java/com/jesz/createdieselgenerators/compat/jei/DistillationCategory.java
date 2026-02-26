@@ -10,7 +10,7 @@ import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.processing.recipe.HeatCondition;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.simibubi.create.foundation.utility.Lang;
+import com.simibubi.create.foundation.utility.CreateLang;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import mezz.jei.api.fabric.constants.FabricTypes;
 import mezz.jei.api.fabric.ingredients.fluids.IJeiFluidIngredient;
@@ -40,29 +40,14 @@ public class DistillationCategory extends CreateRecipeCategory<DistillationRecip
         if(recipe.getFluidIngredients().isEmpty())
             return;
         FluidIngredient fluidIngredient = recipe.getFluidIngredients().get(0);
-
-        List<FluidStack> v = fluidIngredient.getMatchingFluidStacks();
-        List<FluidStack> r = withImprovedVisibility(v);
-        List<IJeiFluidIngredient> j = toJei(r);
-
-        builder
-                .addSlot(RecipeIngredientRole.INPUT, 17, 145)
-                .setBackground(getRenderedSlot(), -1, -1)
-                //.addIngredient(FabricTypes.FLUID_STACK, toJei(withImprovedVisibility(new FluidStack(recipe.getFluidResults().get(0), 1000))))
-                .addIngredients(FabricTypes.FLUID_STACK, j)
-                .addTooltipCallback(addFluidTooltip(fluidIngredient.getRequiredAmount()));
+        addFluidSlot(builder, 17, 145, fluidIngredient);
 
 
         int i = 1;
 
-        int size = recipe.getRollableResults().size() + recipe.getFluidResults().size();
         for (FluidStack fluidResult : recipe.getFluidResults()) {
             int yPosition = -23 * i + 150;
-            builder
-                    .addSlot(RecipeIngredientRole.OUTPUT, 130, yPosition)
-                    .setBackground(getRenderedSlot(), -1, -1)
-                    .addIngredient(FabricTypes.FLUID_STACK, toJei(withImprovedVisibility(fluidResult)))
-                    .addTooltipCallback(addFluidTooltip(fluidResult.getAmount()));
+            addFluidSlot(builder, 130, yPosition, fluidResult);
             i++;
         }
 
@@ -78,7 +63,6 @@ public class DistillationCategory extends CreateRecipeCategory<DistillationRecip
                     .addItemStack(AllItems.BLAZE_CAKE.asStack());
         }
     }
-    int height = 0;
     @Override
     public void draw(DistillationRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
 
@@ -96,7 +80,7 @@ public class DistillationCategory extends CreateRecipeCategory<DistillationRecip
         AllGuiTextures heatBar = noHeat ? AllGuiTextures.JEI_NO_HEAT_BAR : AllGuiTextures.JEI_HEAT_BAR;
 
         heatBar.render(graphics, 4, 170);
-        graphics.drawString(Minecraft.getInstance().font, Lang.translateDirect(requiredHeat.getTranslationKey()), 9,
+        graphics.drawString(Minecraft.getInstance().font, CreateLang.translateDirect(requiredHeat.getTranslationKey()), 9,
                 176, requiredHeat.getColor(), false);
     }
 }

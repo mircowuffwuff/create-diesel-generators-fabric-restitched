@@ -4,7 +4,7 @@ import com.jesz.createdieselgenerators.PartialModels;
 import com.jesz.createdieselgenerators.blocks.entity.BasinLidBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer;
-import com.simibubi.create.foundation.render.CachedBufferer;
+import net.createmod.catnip.render.CachedBuffers;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -24,11 +24,11 @@ public class BasinLidRenderer extends SafeBlockEntityRenderer<BasinLidBlockEntit
 
         Direction facing = be.getBlockState().getValue(HORIZONTAL_FACING);
 
-        CachedBufferer.partial(PartialModels.SMALL_GAUGE_DIAL, be.getBlockState())
-                .centre()
-                .rotateY(-facing.toYRot()+180)
+        CachedBuffers.partial(PartialModels.SMALL_GAUGE_DIAL, be.getBlockState())
+                .center()
+                .rotateYDegrees(-facing.toYRot()+180)
                 .translate(0.5625f, -0.375, 0.5f)
-                .unCentre()
-                .rotateZ( be.progress*-90+90).renderInto(ms, bufferSource.getBuffer(RenderType.solid()));
+                .uncenter()
+                .rotateZDegrees( be.progress*-90+90).renderInto(ms, bufferSource.getBuffer(RenderType.solid()));
     }
 }

@@ -3,10 +3,10 @@ package com.jesz.createdieselgenerators;
 import com.jesz.createdieselgenerators.blocks.BlockRegistry;
 import com.jesz.createdieselgenerators.fluids.FluidRegistry;
 import com.jesz.createdieselgenerators.items.ItemRegistry;
-import com.simibubi.create.foundation.utility.Components;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +21,7 @@ public class CreativeTab {
             BuiltInRegistries.CREATIVE_MODE_TAB,
             new ResourceLocation(CreateDieselGenerators.ID, "s"), /*i dont have a clue what this s does here, but it works*/
             FabricItemGroup.builder()
-                    .title(Components.translatable("itemGroup.cdg_creative_tab"))
+                    .title(Component.translatable("itemGroup.cdg_creative_tab"))
                     .icon(() -> new ItemStack(BlockRegistry.DIESEL_ENGINE))
                     .displayItems(((itemDisplayParameters, output) -> {
                         output.accept(ItemRegistry.ENGINE_PISTON);

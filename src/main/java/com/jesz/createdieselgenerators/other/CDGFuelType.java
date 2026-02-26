@@ -2,7 +2,7 @@ package com.jesz.createdieselgenerators.other;
 
 import com.jesz.createdieselgenerators.blocks.entity.HugeDieselEngineBlockEntity;
 import com.jesz.createdieselgenerators.blocks.entity.LargeDieselGeneratorBlockEntity;
-import com.simibubi.create.foundation.utility.Couple;
+import net.createmod.catnip.data.Couple;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class CDGFuelType {

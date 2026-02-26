@@ -6,9 +6,9 @@ import com.jesz.createdieselgenerators.blocks.PoweredEngineShaftBlock;
 import com.jesz.createdieselgenerators.compat.computercraft.CCProxy;
 import com.jesz.createdieselgenerators.other.FuelTypeManager;
 import com.jesz.createdieselgenerators.sounds.SoundRegistry;
+import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.compat.computercraft.AbstractComputerBehaviour;
 import com.simibubi.create.content.contraptions.bearing.WindmillBearingBlockEntity;
-import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.content.kinetics.simpleRelays.ShaftBlock;
@@ -17,7 +17,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOptionBehaviour;
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.simibubi.create.foundation.utility.Lang;
+import com.simibubi.create.foundation.utility.CreateLang;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -148,7 +148,7 @@ public class HugeDieselEngineBlockEntity extends SmartBlockEntity implements IHa
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         behaviours.add(computerBehaviour = CCProxy.behaviour(this));
         movementDirection = new ScrollOptionBehaviour<>(WindmillBearingBlockEntity.RotationDirection.class,
-                Lang.translateDirect("contraptions.windmill.rotation_direction"), this, new HugeDieselEngineValueBox());
+                CreateLang.translateDirect("contraptions.windmill.rotation_direction"), this, new HugeDieselEngineValueBox());
         movementDirection.withCallback($ -> onDirectionChanged());
 
         behaviours.add(movementDirection);
@@ -189,19 +189,19 @@ public class HugeDieselEngineBlockEntity extends SmartBlockEntity implements IHa
         float stressBase = FuelTypeManager.getGeneratedStress(this, tank.getPrimaryHandler().getFluid().getFluid());
         if (Mth.equal(stressBase, 0))
             return false;
-        Lang.translate("gui.goggles.generator_stats")
+        CreateLang.translate("gui.goggles.generator_stats")
                 .forGoggles(tooltip);
-        Lang.translate("tooltip.capacityProvided")
+        CreateLang.translate("tooltip.capacityProvided")
                 .style(ChatFormatting.GRAY)
                 .forGoggles(tooltip);
 
         float stressTotal = Math.abs(stressBase);
 
-        Lang.number(stressTotal)
+        CreateLang.number(stressTotal)
                 .translate("generic.unit.stress")
                 .style(ChatFormatting.AQUA)
                 .space()
-                .add(Lang.translate("gui.goggles.at_current_speed")
+                .add(CreateLang.translate("gui.goggles.at_current_speed")
                         .style(ChatFormatting.DARK_GRAY))
                 .forGoggles(tooltip, 1);
         return containedFluidTooltip(tooltip, isPlayerSneaking, tank.getCapability());
@@ -224,7 +224,7 @@ public class HugeDieselEngineBlockEntity extends SmartBlockEntity implements IHa
             return null;
 
         axis = KineticBlockEntityRenderer.getRotationAxisOf(shaft);
-        angle = KineticBlockEntityRenderer.getAngleForTe(shaft, shaft.getBlockPos(), axis);
+        angle = KineticBlockEntityRenderer.getAngleForBe(shaft, shaft.getBlockPos(), axis);
         if (axis == facingAxis)
             return null;
         if (axis.isHorizontal() && (facingAxis == Direction.Axis.X ^ facing.getAxisDirection() == Direction.AxisDirection.POSITIVE))
