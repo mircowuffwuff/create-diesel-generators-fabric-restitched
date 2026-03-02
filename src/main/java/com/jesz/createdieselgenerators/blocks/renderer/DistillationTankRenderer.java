@@ -50,7 +50,7 @@ public class DistillationTankRenderer extends SafeBlockEntityRenderer<Distillati
         var tank = be.tankInventory;
         var fluidStack = tank.getFluid();
 
-        if (fluidStack.isEmpty())
+        if (fluidStack.isEmpty() || fluidStack.getFluid().getFluidType()==null )
             return;
         boolean top = fluidStack.getFluid()
                 .getFluidType()
