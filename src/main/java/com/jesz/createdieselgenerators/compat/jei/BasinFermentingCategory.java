@@ -11,14 +11,16 @@ import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.item.ItemHelper;
-import com.simibubi.create.foundation.utility.Lang;
-import com.simibubi.create.foundation.utility.Pair;
+import com.simibubi.create.foundation.utility.CreateLang;
+import net.createmod.catnip.data.Pair;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import mezz.jei.api.fabric.constants.FabricTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.gui.ingredient.IRecipeSlotTooltipCallback;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
@@ -34,6 +36,15 @@ public class BasinFermentingCategory extends CreateRecipeCategory<BasinRecipe> {
     private final AnimatedBlazeBurner heater = new AnimatedBlazeBurner();
     public BasinFermentingCategory(Info<BasinRecipe> info) {
         super(info);
+    }
+
+    public static IRecipeSlotTooltipCallback addStochasticTooltip2(ProcessingOutput output) {
+        return (view, tooltip) -> {
+            float chance = output.getChance();
+            if (chance != 1)
+                tooltip.add(CreateLang.translateDirect("recipe.processing.chance", chance < 0.01 ? "<1" : (int) (chance * 100))
+                        .withStyle(ChatFormatting.GOLD));
+        };
     }
 
     @Override
@@ -59,11 +70,7 @@ public class BasinFermentingCategory extends CreateRecipeCategory<BasinRecipe> {
             i++;
         }
         for (FluidIngredient fluidIngredient : recipe.getFluidIngredients()) {
-            builder
-                    .addSlot(RecipeIngredientRole.INPUT, 17 + xOffset + (i % 3) * 19, 41 - (i / 3) * 19)
-                    .setBackground(getRenderedSlot(), -1, -1)
-                    .addIngredients(FabricTypes.FLUID_STACK, toJei(withImprovedVisibility(fluidIngredient.getMatchingFluidStacks())))
-                    .addTooltipCallback(addFluidTooltip(fluidIngredient.getRequiredAmount()));
+            addFluidSlot(builder, 17 + xOffset + (i % 3) * 19, 41 - (i / 3) * 19, fluidIngredient);
             i++;
         }
 
@@ -78,7 +85,7 @@ public class BasinFermentingCategory extends CreateRecipeCategory<BasinRecipe> {
                     .addSlot(RecipeIngredientRole.OUTPUT, xPosition, yPosition)
                     .setBackground(getRenderedSlot(result), -1, -1)
                     .addItemStack(result.getStack())
-                    .addTooltipCallback(addStochasticTooltip(result));
+                    .addTooltipCallback(addStochasticTooltip2(result));
             i++;
         }
 
@@ -86,11 +93,7 @@ public class BasinFermentingCategory extends CreateRecipeCategory<BasinRecipe> {
             int xPosition = 142 - (size % 2 != 0 && i == size - 1 ? 0 : i % 2 == 0 ? 10 : -9);
             int yPosition = -19 * (i / 2) + 51;
 
-            builder
-                    .addSlot(RecipeIngredientRole.OUTPUT, xPosition, yPosition)
-                    .setBackground(getRenderedSlot(), -1, -1)
-                    .addIngredient(FabricTypes.FLUID_STACK, toJei(withImprovedVisibility(fluidResult)))
-                    .addTooltipCallback(addFluidTooltip(fluidResult.getAmount()));
+            addFluidSlot(builder, xPosition, yPosition, fluidResult);
             i++;
         }
 
@@ -125,7 +128,7 @@ public class BasinFermentingCategory extends CreateRecipeCategory<BasinRecipe> {
         AllGuiTextures heatBar = noHeat ? AllGuiTextures.JEI_NO_HEAT_BAR : AllGuiTextures.JEI_HEAT_BAR;
         heatBar.render(graphics, 4, 80);
 
-        graphics.drawString(Minecraft.getInstance().font, Lang.translateDirect(requiredHeat.getTranslationKey()), 9,
+        graphics.drawString(Minecraft.getInstance().font, CreateLang.translateDirect(requiredHeat.getTranslationKey()), 9,
                 86, requiredHeat.getColor(), false);
     }
 }

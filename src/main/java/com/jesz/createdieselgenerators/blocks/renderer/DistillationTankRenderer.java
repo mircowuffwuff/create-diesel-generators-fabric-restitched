@@ -2,16 +2,17 @@ package com.jesz.createdieselgenerators.blocks.renderer;
 
 import com.jesz.createdieselgenerators.PartialModels;
 import com.jesz.createdieselgenerators.blocks.entity.DistillationTankBlockEntity;
-import com.jozufozu.flywheel.util.transform.TransformStack;
+import dev.engine_room.flywheel.lib.transform.TransformStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.content.fluids.tank.FluidTankRenderer;
+import net.createmod.catnip.platform.FabricCatnipServices;
 import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer;
 import com.simibubi.create.foundation.fluid.FluidRenderer;
-import com.simibubi.create.foundation.render.CachedBufferer;
-import com.simibubi.create.foundation.utility.Iterate;
-import com.simibubi.create.foundation.utility.animation.LerpedFloat;
+import net.createmod.catnip.render.CachedBuffers;
+import net.createmod.catnip.data.Iterate;
+import net.createmod.catnip.animation.LerpedFloat;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -49,9 +50,11 @@ public class DistillationTankRenderer extends SafeBlockEntityRenderer<Distillati
         var tank = be.tankInventory;
         var fluidStack = tank.getFluid();
 
-        if (fluidStack.isEmpty())
+        if (fluidStack.isEmpty() || fluidStack.getFluid().getFluidType()==null )
             return;
-        boolean top = FluidVariantAttributes.isLighterThanAir(fluidStack.getType());
+        boolean top = fluidStack.getFluid()
+                .getFluidType()
+                .isLighterThanAir();
 
         float xMin = tankHullWidth;
         float xMax = xMin + be.getWidth() - 2 * tankHullWidth;
@@ -68,7 +71,7 @@ public class DistillationTankRenderer extends SafeBlockEntityRenderer<Distillati
 
         ms.pushPose();
         ms.translate(0, clampedLevel - totalHeight, 0);
-        FluidRenderer.renderFluidBox(fluidStack, xMin, yMin, zMin, xMax, yMax, zMax, buffer, ms, light, false);
+        FabricCatnipServices.FLUID_RENDERER.renderFluidBox(fluidStack, xMin, yMin, zMin, xMax, yMax, zMax, buffer, ms, light, false, true);
         ms.popPose();
     }
 
@@ -77,7 +80,7 @@ public class DistillationTankRenderer extends SafeBlockEntityRenderer<Distillati
         BlockState blockState = be.getBlockState();
         VertexConsumer vb = buffer.getBuffer(RenderType.solid());
         ms.pushPose();
-        TransformStack msr = TransformStack.cast(ms);
+        TransformStack msr = TransformStack.of(ms);
         msr.translate(be.getWidth() / 2f, 0.5, be.getWidth() / 2f);
 
         float dialPivot = 5.75f / 16;
@@ -85,15 +88,15 @@ public class DistillationTankRenderer extends SafeBlockEntityRenderer<Distillati
 
         for (Direction d : Iterate.horizontalDirections) {
             ms.pushPose();
-            CachedBufferer.partial(PartialModels.DISTILLATION_GAUGE, blockState)
-                    .rotateY(d.toYRot())
-                    .unCentre()
+            CachedBuffers.partial(PartialModels.DISTILLATION_GAUGE, blockState)
+                    .rotateYDegrees(d.toYRot())
+                    .uncenter()
                     .translate(be.getWidth() / 2f - 6 / 16f, 0, 0)
                     .light(light)
                     .renderInto(ms, vb);
-            CachedBufferer.partial(AllPartialModels.BOILER_GAUGE_DIAL, blockState)
-                    .rotateY(d.toYRot())
-                    .unCentre()
+            CachedBuffers.partial(AllPartialModels.BOILER_GAUGE_DIAL, blockState)
+                    .rotateYDegrees(d.toYRot())
+                    .uncenter()
                     .translate(be.getWidth() / 2f - 6 / 16f, 0, 0)
                     .translate(0, dialPivot, dialPivot)
                     .rotateX(-90 * progress)

@@ -6,7 +6,7 @@ import com.simibubi.create.Create;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeSerializer;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
-import com.simibubi.create.foundation.utility.Lang;
+import com.simibubi.create.foundation.utility.CreateLang;
 import com.tterrag.registrate.fabric.RegistryObject;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -30,7 +30,7 @@ public enum RecipeRegistry implements IRecipeTypeInfo {
     private final Supplier<RecipeType<?>> type;
 
     RecipeRegistry(Supplier<RecipeSerializer<?>> serializerSupplier) {
-        String name = Lang.asId(name());
+        String name = CreateLang.asId(name());
         id = CreateDieselGenerators.asResource(name);
         serializerObject = Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, id, serializerSupplier.get());
         typeObject = simpleType(id);

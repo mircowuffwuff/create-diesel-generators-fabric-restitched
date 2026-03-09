@@ -5,19 +5,20 @@ import com.jesz.createdieselgenerators.blocks.entity.LargeDieselGeneratorBlockEn
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
 import com.jesz.createdieselgenerators.items.ItemRegistry;
 import com.simibubi.create.api.connectivity.ConnectivityHandler;
+import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.content.fluids.tank.CreativeFluidTankBlockEntity;
 import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import com.simibubi.create.content.fluids.transfer.GenericItemEmptying;
 import com.simibubi.create.content.fluids.transfer.GenericItemFilling;
 import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.simibubi.create.content.schematics.requirement.ISpecialBlockItemRequirement;
+import com.simibubi.create.api.schematic.requirement.SpecialBlockItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.simibubi.create.foundation.placement.IPlacementHelper;
-import com.simibubi.create.foundation.placement.PlacementHelpers;
+import net.createmod.catnip.placement.IPlacementHelper;
+import net.createmod.catnip.placement.PlacementHelpers;
 import com.simibubi.create.foundation.placement.PoleHelper;
 import io.github.fabricators_of_create.porting_lib.block.ConnectableRedstoneBlock;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
@@ -67,7 +68,7 @@ import static com.jesz.createdieselgenerators.items.ItemRegistry.ENGINE_SILENCER
 import static net.minecraft.core.Direction.NORTH;
 import static net.minecraft.core.Direction.SOUTH;
 
-public class LargeDieselGeneratorBlock extends HorizontalKineticBlock implements IBE<LargeDieselGeneratorBlockEntity>, ISpecialBlockItemRequirement, ICDGKinetics, ConnectableRedstoneBlock {
+public class LargeDieselGeneratorBlock extends HorizontalKineticBlock implements IBE<LargeDieselGeneratorBlockEntity>, SpecialBlockItemRequirement, ICDGKinetics, ConnectableRedstoneBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
     public static final BooleanProperty POWERED_BEFORE = BooleanProperty.create("last_powered");
@@ -115,7 +116,7 @@ public class LargeDieselGeneratorBlock extends HorizontalKineticBlock implements
             if (!player.isCreative())
                 itemInHand.shrink(1);
             level.setBlock(pos, state.setValue(SILENCED, true), 3);
-            playRotateSound(level, pos);
+            IWrenchable.playRotateSound(level, pos);
             return InteractionResult.SUCCESS;
         }
         if(!ConfigRegistry.ENGINES_FILLED_WITH_ITEMS.get())
@@ -222,7 +223,7 @@ public class LargeDieselGeneratorBlock extends HorizontalKineticBlock implements
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         if(context.getClickedFace() == Direction.UP){
             KineticBlockEntity.switchToBlockState(context.getLevel(), context.getClickedPos(), updateAfterWrenched(state.setValue(PIPE, !state.getValue(PIPE)), context));
-            playRotateSound(context.getLevel(), context.getClickedPos());
+            IWrenchable.playRotateSound(context.getLevel(), context.getClickedPos());
             return InteractionResult.SUCCESS;
         }
         if(state.getValue(SILENCED))
@@ -230,7 +231,7 @@ public class LargeDieselGeneratorBlock extends HorizontalKineticBlock implements
                 if (!context.getPlayer().isCreative())
                     context.getPlayer().getInventory().placeItemBackInInventory(ENGINE_SILENCER.asStack());
                 context.getLevel().setBlock(context.getClickedPos(), state.setValue(SILENCED, false), 3);
-                playRotateSound(context.getLevel(), context.getClickedPos());
+                IWrenchable.playRotateSound(context.getLevel(), context.getClickedPos());
                 return InteractionResult.SUCCESS;
             }
         return super.onWrenched(state,context);

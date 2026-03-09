@@ -2,7 +2,7 @@ package com.jesz.createdieselgenerators.blocks.entity;
 
 import com.jesz.createdieselgenerators.blocks.HugeDieselEngineBlock;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
-import com.simibubi.create.foundation.utility.Couple;
+import net.createmod.catnip.data.Couple;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;

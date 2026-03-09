@@ -26,7 +26,7 @@ public class PumpjackHoleBlock extends Block implements IBE<PumpjackHoleBlockEnt
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
         if(context.getClickedFace().getAxis().isHorizontal()){
             context.getLevel().setBlock(context.getClickedPos(), state.setValue(BooleanProperty.create(context.getClickedFace().getName()), !state.getValue(BooleanProperty.create(context.getClickedFace().getName()))), 3);
-            playRotateSound(context.getLevel(), context.getClickedPos());
+            IWrenchable.playRotateSound(context.getLevel(), context.getClickedPos());
 
             return InteractionResult.SUCCESS;
         }

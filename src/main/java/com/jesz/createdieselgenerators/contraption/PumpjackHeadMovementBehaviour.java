@@ -3,17 +3,16 @@ package com.jesz.createdieselgenerators.contraption;
 import com.jesz.createdieselgenerators.blocks.PumpjackBearingBBlock;
 import com.jesz.createdieselgenerators.blocks.entity.PumpjackBearingBlockEntity;
 import com.jesz.createdieselgenerators.blocks.entity.PumpjackHoleBlockEntity;
-import com.jozufozu.flywheel.core.virtual.VirtualRenderWorld;
-import com.jozufozu.flywheel.util.AnimationTickHolder;
+import net.createmod.catnip.animation.AnimationTickHolder;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.simibubi.create.content.contraptions.ControlledContraptionEntity;
 import com.simibubi.create.content.contraptions.bearing.BearingContraption;
-import com.simibubi.create.content.contraptions.behaviour.MovementBehaviour;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import com.simibubi.create.content.contraptions.render.ContraptionMatrices;
-import com.simibubi.create.content.contraptions.render.ContraptionRenderDispatcher;
-import com.simibubi.create.foundation.render.CachedBufferer;
-import com.simibubi.create.foundation.render.SuperByteBuffer;
+import com.simibubi.create.foundation.virtualWorld.VirtualRenderWorld;
+import net.createmod.catnip.render.CachedBuffers;
+import net.createmod.catnip.render.SuperByteBuffer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -54,16 +53,16 @@ public class PumpjackHeadMovementBehaviour implements MovementBehaviour {
             bearing = be;
         if(bearing == null)
             return;
-        SuperByteBuffer cover = CachedBufferer.partial(PUMPJACK_ROPE, context.state);
+        SuperByteBuffer cover = CachedBuffers.partial(PUMPJACK_ROPE, context.state);
         if(((BearingContraption) context.contraption).getFacing().getOpposite().getAxis() == Direction.Axis.X){
             double zDst = context.position.z - hole.getZ()-0.5f;
             double yDst = context.position.y - hole.getY()-0.8f;
             float distanceFromHole = (float) Math.sqrt(zDst*zDst + yDst*yDst);
             double angle = -((ControlledContraptionEntity) context.contraption.entity).getAngle(AnimationTickHolder.getPartialTicks())-(180 * Math.atan2(yDst,zDst)/Math.PI)+90;
             PoseStack ms = matrices.getModel();
-            cover.transform(ms).translate(0.5, 0.5,  0.5).rotateX(angle)
+            cover.transform(ms).translate(0.5, 0.5,  0.5).rotateXDegrees((float) angle)
                     .scale(1, distanceFromHole, 1)
-                    .light(matrices.getWorld(), ContraptionRenderDispatcher.getContraptionWorldLight(context, renderWorld))
+                    .useLevelLight(context.world, matrices.getWorld())
                     .renderInto(matrices.getViewProjection(), buffer.getBuffer(RenderType.cutoutMipped()));
             return;
         }
@@ -72,9 +71,9 @@ public class PumpjackHeadMovementBehaviour implements MovementBehaviour {
         float distanceFromHole = (float) Math.sqrt(xDst*xDst + yDst*yDst);
         double angle = -((ControlledContraptionEntity) context.contraption.entity).getAngle(AnimationTickHolder.getPartialTicks())+(180 * Math.atan2(yDst,xDst)/Math.PI)-90;
         PoseStack ms = matrices.getModel();
-        cover.transform(ms).translate(0.5, 0.5,  0.5).rotateZ(angle)
+        cover.transform(ms).translate(0.5, 0.5,  0.5).rotateZDegrees((float) angle)
                 .scale(1, distanceFromHole, 1)
-                .light(matrices.getWorld(), ContraptionRenderDispatcher.getContraptionWorldLight(context, renderWorld))
+                .useLevelLight(context.world, matrices.getWorld())
                 .renderInto(matrices.getViewProjection(), buffer.getBuffer(RenderType.cutoutMipped()));
     }
 

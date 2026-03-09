@@ -2,7 +2,7 @@ package com.jesz.createdieselgenerators;
 
 import com.simibubi.create.AllTags;
 import com.simibubi.create.Create;
-import com.simibubi.create.foundation.utility.Lang;
+import com.simibubi.create.foundation.utility.CreateLang;
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -64,7 +64,7 @@ public class TagRegistry {
         }
 
         FluidTags(NameSpace namespace, String path, boolean optional, boolean alwaysDatagen) {
-            ResourceLocation id = new ResourceLocation(namespace.id, path == null ? Lang.asId(name()) : path);
+            ResourceLocation id = new ResourceLocation(namespace.id, path == null ? CreateLang.asId(name()) : path);
             tag = optionalTag(BuiltInRegistries.FLUID, id);
             this.alwaysDatagen = alwaysDatagen;
         }

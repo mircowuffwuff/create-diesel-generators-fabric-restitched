@@ -14,7 +14,7 @@ import com.jesz.createdieselgenerators.other.SpoutCanisterFilling;
 import com.jesz.createdieselgenerators.recipes.RecipeRegistry;
 import com.jesz.createdieselgenerators.sounds.SoundRegistry;
 import com.simibubi.create.AllTags;
-import com.simibubi.create.api.behaviour.BlockSpoutingBehaviour;
+import com.simibubi.create.api.behaviour.spouting.BlockSpoutingBehaviour;
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
@@ -81,7 +81,7 @@ public class CreateDieselGenerators implements ModInitializer {
 
         Mods.COMPUTERCRAFT.executeIfInstalled(() -> CCProxy::register);
 
-        BlockSpoutingBehaviour.addCustomSpoutInteraction(new ResourceLocation("createdieselgenerators:canister_filling"), new SpoutCanisterFilling());
+        BlockSpoutingBehaviour.BY_BLOCK_ENTITY.register(BlockEntityRegistry.CANISTER.get(), new SpoutCanisterFilling());
         //ForgeConfigRegistry.INSTANCE.register()
         //ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ConfigRegistry.SERVER_SPEC, "createdieselgenerators-server.toml");
         //ConfigRegistry.register();

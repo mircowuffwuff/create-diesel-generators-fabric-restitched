@@ -7,13 +7,13 @@ import com.jesz.createdieselgenerators.config.ConfigRegistry;
 import com.jesz.createdieselgenerators.other.CombustionHelper;
 import com.jesz.createdieselgenerators.other.CombustionHelper.*;
 import com.jesz.createdieselgenerators.other.FuelTypeManager;
-import com.jozufozu.flywheel.util.AnimationTickHolder;
+import net.createmod.catnip.animation.AnimationTickHolder;
+import net.createmod.catnip.lang.FontHelper;
 import com.mojang.brigadier.CommandDispatcher;
 import com.simibubi.create.content.equipment.goggles.GogglesItem;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.foundation.item.TooltipHelper;
-import com.simibubi.create.foundation.utility.Components;
-import com.simibubi.create.foundation.utility.Lang;
+import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CKinetics;
 import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.BucketItemAccessor;
@@ -215,8 +215,8 @@ public class Events {
 
             if(FuelTypeManager.getGeneratedSpeed(fluid) != 0){
                 if(Screen.hasAltDown()) {
-                    tooltip.add(1, Components.translatable("createdieselgenerators.tooltip.holdForFuelStats", Components.translatable("createdieselgenerators.tooltip.keyAlt").withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(2, Components.immutableEmpty());
+                    tooltip.add(1, Component.translatable("createdieselgenerators.tooltip.holdForFuelStats", Component.translatable("createdieselgenerators.tooltip.keyAlt").withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltip.add(2, Component.empty());
                     byte enginesEnabled = (byte) ((DieselGeneratorBlock.EngineTypes.NORMAL.enabled() ? 1 : 0) + (DieselGeneratorBlock.EngineTypes.MODULAR.enabled() ? 1 : 0) + (DieselGeneratorBlock.EngineTypes.HUGE.enabled() ? 1 : 0));
                     int currentEngineIndex = (AnimationTickHolder.getTicks() % (120)) / 20;
                     List<DieselGeneratorBlock.EngineTypes> enabledEngines = Arrays.stream(DieselGeneratorBlock.EngineTypes.values()).filter(DieselGeneratorBlock.EngineTypes::enabled).toList();
@@ -225,14 +225,14 @@ public class Events {
                     float currentCapacity = FuelTypeManager.getGeneratedStress(currentEngine, fluid);
                     float currentBurn = FuelTypeManager.getBurnRate(currentEngine, fluid);
                     if(enginesEnabled != 1)
-                        tooltip.add(3, Components.translatable("block.createdieselgenerators."+
+                        tooltip.add(3, Component.translatable("block.createdieselgenerators."+
                                 (currentEngine == DieselGeneratorBlock.EngineTypes.MODULAR ? "large_" : currentEngine == DieselGeneratorBlock.EngineTypes.HUGE ? "huge_" : "")+"diesel_engine").withStyle(ChatFormatting.GRAY));
-                    tooltip.add(enginesEnabled != 1 ? 4 : 3, Components.translatable("createdieselgenerators.tooltip.fuelSpeed", Lang.number(currentSpeed).component().withStyle(TooltipHelper.Palette.STANDARD_CREATE.primary())).withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(enginesEnabled != 1 ? 5 : 4, Components.translatable("createdieselgenerators.tooltip.fuelStress", Lang.number(currentCapacity).component().withStyle(TooltipHelper.Palette.STANDARD_CREATE.primary())).withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(enginesEnabled != 1 ? 6 : 5, Components.translatable("createdieselgenerators.tooltip.fuelBurnRate", Lang.number(currentBurn).component().withStyle(TooltipHelper.Palette.STANDARD_CREATE.primary())).withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(enginesEnabled != 1 ? 7 : 6, Components.immutableEmpty());
+                    tooltip.add(enginesEnabled != 1 ? 4 : 3, Component.translatable("createdieselgenerators.tooltip.fuelSpeed", CreateLang.number(currentSpeed).component().withStyle(FontHelper.Palette.STANDARD_CREATE.primary())).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltip.add(enginesEnabled != 1 ? 5 : 4, Component.translatable("createdieselgenerators.tooltip.fuelStress", CreateLang.number(currentCapacity).component().withStyle(FontHelper.Palette.STANDARD_CREATE.primary())).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltip.add(enginesEnabled != 1 ? 6 : 5, Component.translatable("createdieselgenerators.tooltip.fuelBurnRate", CreateLang.number(currentBurn).component().withStyle(FontHelper.Palette.STANDARD_CREATE.primary())).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltip.add(enginesEnabled != 1 ? 7 : 6, Component.empty());
                 }else {
-                    tooltip.add(1, Components.translatable("createdieselgenerators.tooltip.holdForFuelStats", Components.translatable("createdieselgenerators.tooltip.keyAlt").withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltip.add(1, Component.translatable("createdieselgenerators.tooltip.holdForFuelStats", Component.translatable("createdieselgenerators.tooltip.keyAlt").withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
                 }
             }
         }
@@ -242,21 +242,21 @@ public class Events {
         List<Component> tooltipList = new ArrayList<>();
         if(!Component.translatable(path + ".tooltip.summary").getString().equals(path + ".tooltip.summary")) {
             if (Screen.hasShiftDown()) {
-                tooltipList.add(Lang.translateDirect("tooltip.holdForDescription", Component.translatable("create.tooltip.keyShift").withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.DARK_GRAY));
-                tooltipList.add(Components.immutableEmpty());
-                tooltipList.addAll(TooltipHelper.cutStringTextComponent(Component.translatable(path + ".tooltip.summary").getString(), TooltipHelper.Palette.STANDARD_CREATE));
+                tooltipList.add(CreateLang.translateDirect("tooltip.holdForDescription", Component.translatable("create.tooltip.keyShift").withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.DARK_GRAY));
+                tooltipList.add(Component.empty());
+                tooltipList.addAll(TooltipHelper.cutStringTextComponent(Component.translatable(path + ".tooltip.summary").getString(), FontHelper.Palette.STANDARD_CREATE));
 
                 if(!Component.translatable(path + ".tooltip.condition1").getString().equals(path + ".tooltip.condition1")) {
-                    tooltipList.add(Components.immutableEmpty());
+                    tooltipList.add(Component.empty());
                     tooltipList.add(Component.translatable(path + ".tooltip.condition1").withStyle(ChatFormatting.GRAY));
-                    tooltipList.addAll(TooltipHelper.cutStringTextComponent(Component.translatable(path + ".tooltip.behaviour1").getString(), TooltipHelper.Palette.STANDARD_CREATE.primary(), TooltipHelper.Palette.STANDARD_CREATE.highlight(), 1));
+                    tooltipList.addAll(TooltipHelper.cutStringTextComponent(Component.translatable(path + ".tooltip.behaviour1").getString(), FontHelper.Palette.STANDARD_CREATE.primary(), FontHelper.Palette.STANDARD_CREATE.highlight(), 1));
                     if(!Component.translatable(path + ".tooltip.condition2").getString().equals(path + ".tooltip.condition2")) {
                         tooltipList.add(Component.translatable(path + ".tooltip.condition2").withStyle(ChatFormatting.GRAY));
-                        tooltipList.addAll(TooltipHelper.cutStringTextComponent(Component.translatable(path + ".tooltip.behaviour2").getString(), TooltipHelper.Palette.STANDARD_CREATE.primary(), TooltipHelper.Palette.STANDARD_CREATE.highlight(), 1));
+                        tooltipList.addAll(TooltipHelper.cutStringTextComponent(Component.translatable(path + ".tooltip.behaviour2").getString(), FontHelper.Palette.STANDARD_CREATE.primary(), FontHelper.Palette.STANDARD_CREATE.highlight(), 1));
                     }
                 }
             } else {
-                tooltipList.add(Lang.translateDirect("tooltip.holdForDescription", Component.translatable("create.tooltip.keyShift").withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
+                tooltipList.add(CreateLang.translateDirect("tooltip.holdForDescription", Component.translatable("create.tooltip.keyShift").withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.DARK_GRAY));
             }
         }
         tooltip.addAll(1,tooltipList);
@@ -272,39 +272,39 @@ public class Events {
                     float stressCapacity = k.getDefaultStressCapacity();
                     float speed = k.getDefaultSpeed();
 
-                    tooltip.add(Components.immutableEmpty());
+                    tooltip.add(Component.empty());
 
                     tooltip.add(Component.translatable("create.tooltip.capacityProvided").withStyle(ChatFormatting.GRAY));
                     MutableComponent component;
                     if (k.getDefaultStressCapacity() >= config.highCapacity.get())
-                        component = Components.literal(TooltipHelper.makeProgressBar(3, 3)).append(hasGoggles ? Component.empty() : Component.translatable("create.tooltip.capacityProvided.high")).withStyle(IRotate.StressImpact.LOW.getAbsoluteColor());
+                        component = Component.literal(TooltipHelper.makeProgressBar(3, 3)).append(hasGoggles ? Component.empty() : Component.translatable("create.tooltip.capacityProvided.high")).withStyle(IRotate.StressImpact.LOW.getAbsoluteColor());
                     else if (k.getDefaultStressCapacity() >= config.mediumCapacity.get())
-                        component = Components.literal(TooltipHelper.makeProgressBar(3, 2)).append(hasGoggles ? Component.empty() : Component.translatable("create.tooltip.capacityProvided.medium")).withStyle(IRotate.StressImpact.MEDIUM.getAbsoluteColor());
+                        component = Component.literal(TooltipHelper.makeProgressBar(3, 2)).append(hasGoggles ? Component.empty() : Component.translatable("create.tooltip.capacityProvided.medium")).withStyle(IRotate.StressImpact.MEDIUM.getAbsoluteColor());
                     else
-                        component = Components.literal(TooltipHelper.makeProgressBar(3, 1)).append(hasGoggles ? Component.empty() : Components.translatable("create.tooltip.capacityProvided.low")).withStyle(IRotate.StressImpact.HIGH.getAbsoluteColor());
+                        component = Component.literal(TooltipHelper.makeProgressBar(3, 1)).append(hasGoggles ? Component.empty() : Component.translatable("create.tooltip.capacityProvided.low")).withStyle(IRotate.StressImpact.HIGH.getAbsoluteColor());
 
                     if (hasGoggles) {
-                        tooltip.add(component.append(Lang.number(stressCapacity / speed)
+                        tooltip.add(component.append(CreateLang.number(stressCapacity / speed)
                                 .text("x ")
-                                .add(Lang.translate("generic.unit.rpm"))
+                                .add(CreateLang.translate("generic.unit.rpm"))
                                 .component()));
 
                         if (speed != 0) {
                             tooltip.add(Component.literal(" -> ")
-                                    .append(Lang.translate("tooltip.up_to", Lang.number(k.getDefaultStressCapacity())).add(Lang.translate("generic.unit.stress")).component()).withStyle(ChatFormatting.DARK_GRAY));
+                                    .append(CreateLang.translate("tooltip.up_to", CreateLang.number(k.getDefaultStressCapacity())).add(CreateLang.translate("generic.unit.stress")).component()).withStyle(ChatFormatting.DARK_GRAY));
                         }
                     }else
                         tooltip.add(component);
                 }else if(k.getDefaultStressStressImpact() != 0){
-                    tooltip.add(Components.immutableEmpty());
+                    tooltip.add(Component.empty());
 
                     tooltip.add(Component.translatable("create.tooltip.stressImpact").withStyle(ChatFormatting.GRAY));
                     if(k.getDefaultStressStressImpact() >= config.highStressImpact.get())
-                        tooltip.add(Components.literal(TooltipHelper.makeProgressBar(3, 3)).append(hasGoggles ? Lang.number(k.getDefaultStressStressImpact()).add(Lang.text("x ").add(Lang.translate("generic.unit.rpm"))).component() : Component.translatable("create.tooltip.stressImpact.high")).withStyle(IRotate.StressImpact.HIGH.getAbsoluteColor()));
+                        tooltip.add(Component.literal(TooltipHelper.makeProgressBar(3, 3)).append(hasGoggles ? CreateLang.number(k.getDefaultStressStressImpact()).add(CreateLang.text("x ").add(CreateLang.translate("generic.unit.rpm"))).component() : Component.translatable("create.tooltip.stressImpact.high")).withStyle(IRotate.StressImpact.HIGH.getAbsoluteColor()));
                     else if(k.getDefaultStressStressImpact() >= config.mediumStressImpact.get())
-                        tooltip.add(Components.literal(TooltipHelper.makeProgressBar(3, 2)).append(hasGoggles ? Lang.number(k.getDefaultStressStressImpact()).add(Lang.text("x ").add(Lang.translate("generic.unit.rpm"))).component() : Component.translatable("create.tooltip.stressImpact.medium")).withStyle(IRotate.StressImpact.MEDIUM.getAbsoluteColor()));
+                        tooltip.add(Component.literal(TooltipHelper.makeProgressBar(3, 2)).append(hasGoggles ? CreateLang.number(k.getDefaultStressStressImpact()).add(CreateLang.text("x ").add(CreateLang.translate("generic.unit.rpm"))).component() : Component.translatable("create.tooltip.stressImpact.medium")).withStyle(IRotate.StressImpact.MEDIUM.getAbsoluteColor()));
                     else
-                        tooltip.add(Components.literal(TooltipHelper.makeProgressBar(3, 1)).append(hasGoggles ? Lang.number(k.getDefaultStressStressImpact()).add(Lang.text("x ").add(Lang.translate("generic.unit.rpm"))).component() : Component.translatable("create.tooltip.stressImpact.low")).withStyle(IRotate.StressImpact.LOW.getAbsoluteColor()));
+                        tooltip.add(Component.literal(TooltipHelper.makeProgressBar(3, 1)).append(hasGoggles ? CreateLang.number(k.getDefaultStressStressImpact()).add(CreateLang.text("x ").add(CreateLang.translate("generic.unit.rpm"))).component() : Component.translatable("create.tooltip.stressImpact.low")).withStyle(IRotate.StressImpact.LOW.getAbsoluteColor()));
                 }
             }
 

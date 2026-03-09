@@ -3,144 +3,157 @@ package com.jesz.createdieselgenerators.blocks.renderer;
 import com.jesz.createdieselgenerators.PartialModels;
 import com.jesz.createdieselgenerators.blocks.entity.PumpjackBearingBlockEntity;
 import com.jesz.createdieselgenerators.blocks.entity.PumpjackCrankBlockEntity;
-import com.jozufozu.flywheel.api.MaterialManager;
-import com.jozufozu.flywheel.api.instance.DynamicInstance;
-import com.jozufozu.flywheel.core.materials.model.ModelData;
-import com.jozufozu.flywheel.util.transform.TransformStack;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.content.kinetics.base.KineticBlockEntityInstance;
-import com.simibubi.create.content.kinetics.base.flwdata.RotatingData;
-import com.simibubi.create.foundation.utility.AnimationTickHolder;
+import com.simibubi.create.AllPartialModels;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntityVisual;
+import com.simibubi.create.content.kinetics.base.RotatingInstance;
+import com.simibubi.create.foundation.render.AllInstanceTypes;
+import dev.engine_room.flywheel.api.instance.Instance;
+import dev.engine_room.flywheel.api.visual.DynamicVisual;
+import dev.engine_room.flywheel.api.visualization.VisualizationContext;
+import dev.engine_room.flywheel.lib.instance.InstanceTypes;
+import dev.engine_room.flywheel.lib.instance.TransformedInstance;
+import dev.engine_room.flywheel.lib.model.Models;
+import dev.engine_room.flywheel.lib.transform.PoseTransformStack;
+import dev.engine_room.flywheel.lib.transform.TransformStack;
+import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
+import net.createmod.catnip.animation.AnimationTickHolder;
+import net.createmod.catnip.math.AngleHelper;
+import net.createmod.catnip.render.CachedBuffers;
+import net.createmod.catnip.render.SuperByteBuffer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec2;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
 
 import static com.simibubi.create.content.kinetics.base.HorizontalKineticBlock.HORIZONTAL_FACING;
-import static com.simibubi.create.foundation.utility.AngleHelper.angleLerp;
 
-public class PumpjackCrankInstance extends KineticBlockEntityInstance<PumpjackCrankBlockEntity> implements DynamicInstance {
-    protected final ModelData crank;
-    protected final ModelData crank_rod;
-    protected final ModelData large_crank;
-    protected final ModelData large_crank_rod;
-    protected final RotatingData shaft;
+public class PumpjackCrankInstance extends KineticBlockEntityVisual<PumpjackCrankBlockEntity> implements SimpleDynamicVisual {
+    protected final TransformedInstance crank;
+    protected final TransformedInstance crank_rod;
+    protected final TransformedInstance large_crank;
+    protected final TransformedInstance large_crank_rod;
+    protected final RotatingInstance shaft;
 
-    public PumpjackCrankInstance(MaterialManager materialManager, PumpjackCrankBlockEntity blockEntity) {
-        super(materialManager, blockEntity);
-        crank = getTransformMaterial().getModel(PartialModels.PUMPJACK_CRANK_SMALL)
+    public PumpjackCrankInstance(VisualizationContext context, PumpjackCrankBlockEntity blockEntity, float partialTick) {
+        super(context, blockEntity, partialTick);
+        crank = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(PartialModels.PUMPJACK_CRANK_SMALL))
                 .createInstance();
-        crank_rod = getTransformMaterial().getModel(PartialModels.PUMPJACK_CRANK_ROD_SMALL)
+        crank_rod = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(PartialModels.PUMPJACK_CRANK_ROD_SMALL))
                 .createInstance();
-        large_crank = getTransformMaterial().getModel(PartialModels.PUMPJACK_CRANK_LARGE)
+        large_crank = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(PartialModels.PUMPJACK_CRANK_LARGE))
                 .createInstance();
-        large_crank_rod = getTransformMaterial().getModel(PartialModels.PUMPJACK_CRANK_ROD_LARGE)
+        large_crank_rod = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(PartialModels.PUMPJACK_CRANK_ROD_LARGE))
                 .createInstance();
-        shaft = setup(getRotatingMaterial().getModel(shaft())
-                .createInstance());
+        shaft = instancerProvider().instancer(AllInstanceTypes.ROTATING, Models.partial(AllPartialModels.SHAFT))
+                .createInstance();
+        shaft.setup(blockEntity)
+                .setPosition(getVisualPosition())
+                .rotateToFace(Direction.UP, blockEntity.getBlockState().getValue(HORIZONTAL_FACING).getOpposite())
+                .setChanged();
     }
     @Override
-    public void beginFrame() {
-        float partialTicks = AnimationTickHolder.getPartialTicks()*0;
-        float angle = angleLerp(partialTicks, blockEntity.prevAngle, blockEntity.angle);
-        PoseStack ms = new PoseStack();
-        TransformStack msr = TransformStack.cast(ms);
+    public void beginFrame(DynamicVisual.Context ctx) {
+        float partialTicks = ctx.partialTick();
 
-        msr.translate(getInstancePosition());
+        BlockState blockState = blockEntity.getBlockState();
+        BlockPos pos = blockEntity.getBlockPos();
+        float angle = AngleHelper.angleLerp(partialTicks, blockEntity.prevAngle, blockEntity.angle);
+
         boolean isXAxis = blockState.getValue(HORIZONTAL_FACING).getAxis() == Direction.Axis.X;
-        double v = ((isXAxis ? angle : -angle) + 90) / 180 * Math.PI;
+        float v = ((isXAxis ? angle : -angle) + 90) * Mth.DEG_TO_RAD;
 
-        double sin = Math.sin(v) * (blockEntity.crankSize.getValue() == 0 ? 0.8125 : 1.125);
-        double cos = Math.cos(v) * (blockEntity.crankSize.getValue() == 0 ? 0.8125 : 1.125);
-        if(blockEntity.bearingPos == null) {
-            if(isXAxis) {
-                msr.translate(0.5, 1.25, 0).rotateZ(angle);
-            }else {
-                msr.translate(0, 1.25, 0.5).rotateY(90).rotateZ(angle);
-            }
-            (blockEntity.crankSize.getValue() == 0 ? crank : large_crank).setTransform(ms);
-            (blockEntity.crankSize.getValue() == 0 ? large_crank : crank).setEmptyTransform();
+        double sin = Mth.sin(v) * (blockEntity.crankSize.getValue() == 0 ? 0.8125 : 1.125);
+        double cos = Mth.cos(v) * (blockEntity.crankSize.getValue() == 0 ? 0.8125 : 1.125);
 
-            double dstY = -1000-sin-1.25 - pos.getY();
-            double dstX = pos.getX()-cos-0.5 - pos.getX();
-            double dstZ = pos.getZ()-cos-0.5 - pos.getZ();
-            ms = new PoseStack();
-            msr = TransformStack.cast(ms);
-            msr.translate(getInstancePosition());
-            if(blockEntity.crankSize.getValue() == 0) {
-                if (isXAxis) {
-                    msr.translate(0.5, 1.25, 0).translate(cos, sin, 0).rotateZ(Math.atan2(dstY, dstX) * 180 / Math.PI - 90);
-                } else {
-                    msr.translate(0, 1.25, 0.5).translate(0, sin, cos).rotateY(90).rotateZ(Math.atan2(dstZ, dstY) * 180 / Math.PI);
-                }
-            } else {
-                // now this is not my best work. i kinda hate it honestly. ive been throwing maths at the wall and seeing what sticks for hours now. aaaa ill take it i guess
-                if (isXAxis) {
-                    msr.scale(2).translate(0.25, 1.25/2, -0.25).translate(cos/2, sin/2, 0).rotateZ(Math.atan2(dstY, dstX) * 180 / Math.PI - 90);
-                } else {
-                    msr.scale(2).translate(-0.25, 1.25/2, 0.25).translate(0, sin/2, cos/2).rotateY(90).rotateZ(Math.atan2(dstZ, dstY) * 180 / Math.PI);
-                }
+        double dstY = -1000-sin-1.25 - pos.getY();
+        double dstX = pos.getX()-cos-0.5 - pos.getX();
+        double dstZ = pos.getZ()-cos-0.5 - pos.getZ();
+
+        PoseStack ms = new PoseStack();
+        TransformStack<PoseTransformStack> msr = TransformStack.of(ms);
+
+        msr.translate(getVisualPosition());
+
+        if (blockEntity.bearingPos != null) {
+            PumpjackBearingBlockEntity bearing = blockEntity.bearing.get();
+
+            float interpolatedAngle = 0;
+            if (bearing != null)
+                interpolatedAngle = bearing.getInterpolatedAngle(partialTicks);
+            if (blockEntity.inPonderAngle != Integer.MIN_VALUE){
+                interpolatedAngle = blockEntity.inPonderAngle;
             }
-            (blockEntity.crankSize.getValue() == 0 ? crank_rod : large_crank_rod).setTransform(ms);
-            (blockEntity.crankSize.getValue() == 0 ? large_crank_rod : crank_rod).setEmptyTransform();
-            return;
+
+            if (!isXAxis)
+                interpolatedAngle *= -1;
+            Vec2 crankBearingLocation = new Vec2(
+                    (float) ((blockEntity.crankBearingLocation.x) * Mth.cos(interpolatedAngle * Mth.DEG_TO_RAD) - (blockEntity.crankBearingLocation.y) * Mth.sin(interpolatedAngle * Mth.DEG_TO_RAD))+0.5f,
+                    (float) ((blockEntity.crankBearingLocation.x) * Mth.sin(interpolatedAngle * Mth.DEG_TO_RAD) + (blockEntity.crankBearingLocation.y) * Mth.cos(interpolatedAngle * Mth.DEG_TO_RAD))+0.5f);
+            if (isXAxis)
+                crankBearingLocation = crankBearingLocation.add(new Vec2((float) blockEntity.bearingPos.getX(), (float) blockEntity.bearingPos.getY()));
+            else
+                crankBearingLocation = crankBearingLocation.add(new Vec2((float) blockEntity.bearingPos.getZ(), (float) blockEntity.bearingPos.getY()));
+
+            dstY = crankBearingLocation.y-sin-1.25 - pos.getY();
+            dstX = crankBearingLocation.x-cos-0.5 - pos.getX();
+            dstZ = crankBearingLocation.x-cos-0.5 - pos.getZ();
         }
-        PumpjackBearingBlockEntity bearing = blockEntity.bearing.get();
-        float interpolatedAngle = 0;
-        if(bearing != null)
-            interpolatedAngle = bearing.getInterpolatedAngle(partialTicks);
-        if(!isXAxis)
-            interpolatedAngle *= -1;
-        Vec2 crankBearingLocation = new Vec2(
-                (float) ((blockEntity.crankBearingLocation.x) * Math.cos(interpolatedAngle/180 * Math.PI) - (blockEntity.crankBearingLocation.y) * Math.sin(interpolatedAngle/180*Math.PI))+0.5f,
-                (float) ((blockEntity.crankBearingLocation.x) * Math.sin(interpolatedAngle/180 * Math.PI) + (blockEntity.crankBearingLocation.y) * Math.cos(interpolatedAngle/180*Math.PI))+0.5f);
-        if(isXAxis)
-            crankBearingLocation = crankBearingLocation.add(new Vec2((float) blockEntity.bearingPos.getX(), (float) blockEntity.bearingPos.getY()));
-        else
-            crankBearingLocation = crankBearingLocation.add(new Vec2((float) blockEntity.bearingPos.getZ(), (float) blockEntity.bearingPos.getY()));
+
         if(isXAxis) {
-            msr.translate(0.5, 1.25, 0).rotateZ(angle);
+            msr.translate(0.5, 1.25, 0).rotateZDegrees(angle);
         }else {
-            msr.translate(0, 1.25, 0.5).rotateY(90).rotateZ(angle);
+            msr.translate(0, 1.25, 0.5).rotateYDegrees(90).rotateZDegrees(angle);
         }
         (blockEntity.crankSize.getValue() == 0 ? crank : large_crank).setTransform(ms);
-        (blockEntity.crankSize.getValue() == 0 ? large_crank : crank).setEmptyTransform();
+        (blockEntity.crankSize.getValue() == 0 ? large_crank : crank).setZeroTransform();
+
 
         ms = new PoseStack();
-        msr = TransformStack.cast(ms);
-        msr.translate(getInstancePosition());
+        msr = TransformStack.of(ms);
+        msr.translate(getVisualPosition());
 
-        double dstY = crankBearingLocation.y-sin-1.25 - pos.getY();
-        double dstX = crankBearingLocation.x-cos-0.5 - pos.getX();
-        double dstZ = crankBearingLocation.x-cos-0.5 - pos.getZ();
-
-        if(blockEntity.crankSize.getValue() == 0) {
-            if(isXAxis) {
-                msr.translate(0.5, 1.25, 0).translate(cos, sin, 0).rotateZ(Math.atan2(dstY, dstX)*180/Math.PI-90);
-            }else {
-                msr.translate(0, 1.25, 0.5).translate(0, sin, cos).rotateY(90).rotateZ(Math.atan2(dstZ, dstY)*180/Math.PI);
-            }
-        } else {
-            // horrible. see above
-            if(isXAxis) {
-                msr.scale(2).translate(0.5/2, 1.25/2, -0.25).translate(cos/2, sin/2, 0).rotateZ(Math.atan2(dstY, dstX)*180/Math.PI-90);
-            }else {
-                msr.scale(2).translate(-0.25, 1.25/2, 0.5/2).translate(0, sin/2, cos/2).rotateY(90).rotateZ(Math.atan2(dstZ, dstY)*180/Math.PI);
-            }
+        if(isXAxis) {
+            msr.translate(0.5, 1.25, 0).translate(cos, sin, 0).rotateZDegrees((float) (Mth.atan2(dstY, dstX) * Mth.RAD_TO_DEG - 90));
+        }else {
+            msr.translate(0, 1.25, 0.5).translate(0, sin, cos).rotateYDegrees(90).rotateZ((float) Mth.atan2(dstZ, dstY));
         }
         (blockEntity.crankSize.getValue() == 0 ? crank_rod : large_crank_rod).setTransform(ms);
-        (blockEntity.crankSize.getValue() == 0 ? large_crank_rod : crank_rod).setEmptyTransform();
-    }
-    @Override
-    public void update() {
-        updateRotation(shaft);
+        (blockEntity.crankSize.getValue() == 0 ? large_crank_rod : crank_rod).setZeroTransform();
+
+        crank.setChanged();
+        crank_rod.setChanged();
+        large_crank_rod.setChanged();
+        large_crank.setChanged();
     }
 
     @Override
-    public void updateLight() {
+    public void update(float partialTick) {
+        shaft.setup(blockEntity)
+                .setChanged();
+    }
+
+    @Override
+    public void updateLight(float pt) {
         relight(pos, shaft, crank, crank_rod, large_crank_rod, large_crank);
     }
 
     @Override
-    public void remove() {
+    public void collectCrumblingInstances(Consumer<@Nullable Instance> consumer) {
+        consumer.accept(shaft);
+        consumer.accept(crank);
+        consumer.accept(crank_rod);
+        consumer.accept(large_crank);
+        consumer.accept(large_crank_rod);
+    }
+
+    @Override
+    protected void _delete() {
         shaft.delete();
         crank.delete();
         crank_rod.delete();

@@ -5,9 +5,10 @@ import com.google.gson.JsonParser;
 import com.jesz.createdieselgenerators.blocks.ct.SpriteShifts;
 import com.jesz.createdieselgenerators.config.ConfigRegistry;
 import com.jesz.createdieselgenerators.fluids.FluidRegistry;
-import com.jesz.createdieselgenerators.ponder.PonderIndex;
-import com.jozufozu.flywheel.core.PartialModel;
-import com.simibubi.create.foundation.utility.Pair;
+import com.jesz.createdieselgenerators.ponder.CDGPonderPlugin;
+import dev.engine_room.flywheel.lib.model.baked.PartialModel;
+import net.createmod.catnip.data.Pair;
+import net.createmod.ponder.foundation.PonderIndex;
 import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
@@ -85,9 +86,9 @@ public class CreateDieselGeneratorsClient implements ClientModInitializer {
                         pluginContext.addModels(resourceLocationsAsList);
 
                         resourceLocations.forEach((skinId, pair) -> {
-                            PartialModels.lighterSkinModels.put(skinId, Pair.of(new PartialModel(pair.getFirst())
-                                    , Pair.of(new PartialModel(pair.getSecond().getFirst())
-                                            , new PartialModel(pair.getSecond().getSecond()))));
+                            PartialModels.lighterSkinModels.put(skinId, Pair.of(PartialModel.of(pair.getFirst())
+                                    , Pair.of(PartialModel.of(pair.getSecond().getFirst())
+                                            , PartialModel.of(pair.getSecond().getSecond()))));
                         });
 
                         //PartialModels.initSkins();
@@ -97,7 +98,7 @@ public class CreateDieselGeneratorsClient implements ClientModInitializer {
         //BuiltinItemRendererRegistry.INSTANCE.register(ItemRegistry.CHEMICAL_SPRAYER, new ChemicalSprayerItemRenderer());
         //BuiltinItemRendererRegistry.INSTANCE.register(ItemRegistry.LIGHTER, new LighterItemRenderer());
 
-        PonderIndex.register();
+        PonderIndex.addPlugin(new CDGPonderPlugin());
 
         BlockRenderLayerMap.INSTANCE.putFluids(RenderType.translucent(), FluidRegistry.ETHANOL.get(), FluidRegistry.ETHANOL.get());
         //consumer.accept(SimpleCustomRenderer.create(this, new ChemicalSprayerItemRenderer()));

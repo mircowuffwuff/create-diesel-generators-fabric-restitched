@@ -5,11 +5,13 @@ import com.jesz.createdieselgenerators.config.ConfigRegistry;
 import com.jesz.createdieselgenerators.recipes.DistillationRecipe;
 import com.jesz.createdieselgenerators.recipes.RecipeRegistry;
 import com.simibubi.create.api.connectivity.ConnectivityHandler;
-import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.fluids.tank.BoilerHeaters;
+import com.simibubi.create.api.boiler.BoilerHeater;
 import com.simibubi.create.content.fluids.tank.FluidTankBlock;
 import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import com.simibubi.create.content.processing.basin.BasinBlockEntity;
+import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.processing.basin.BasinRecipe;
 import com.simibubi.create.content.processing.recipe.HeatCondition;
 import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
@@ -18,10 +20,11 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
-import com.simibubi.create.foundation.utility.animation.LerpedFloat;
+import com.simibubi.create.infrastructure.config.AllConfigs;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
+import net.createmod.catnip.animation.LerpedFloat;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributeHandler;
@@ -46,10 +49,9 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 public class DistillationTankBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Fluid, IHaveGoggleInformation, SidedStorageBlockEntity {
     private static final int MAX_SIZE = 3;
-//FluidTankBlockEntity
+    //FluidTankBlockEntity
     public float progress;
     public int heat;
     //protected LazyOptional<IFluidHandler> fluidCapability;
@@ -110,7 +112,8 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
             for (int zOffset = 0; zOffset < width; zOffset++) {
                 BlockPos pos = getController().offset(xOffset, -1, zOffset);
                 BlockState blockState = level.getBlockState(pos);
-                float heat = BoilerHeaters.getActiveHeat(level, pos, blockState);
+                float heat = BoilerHeater.findHeat(level,pos,blockState);
+                //float heat = BoilerHeaters.getActiveHeat(level, pos, blockState);
                 heatN += (int) heat;
             }
         }
@@ -665,9 +668,9 @@ public class DistillationTankBlockEntity extends SmartBlockEntity implements IMu
 
     @Override
     public int getMaxLength(Direction.Axis longAxis, int width) {
-            if (longAxis == Direction.Axis.Y)
-                return 1;
-            return getMaxWidth();
+        if (longAxis == Direction.Axis.Y)
+            return 1;
+        return getMaxWidth();
     }
 
     @Override
