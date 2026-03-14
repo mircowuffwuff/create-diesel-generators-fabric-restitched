@@ -31,6 +31,7 @@ public class HugeDieselEngineRenderer extends SafeBlockEntityRenderer<HugeDiesel
     protected void renderSafe(HugeDieselEngineBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource bufferSource, int light, int overlay) {
         if (VisualizationManager.supportsVisualization(be.getLevel()))
             return;
+        // Code below is normally never called. The HugeDieselEngineInstance (flywheel renderer) does the actual work.
         Float angle = be.getTargetAngle();
         VertexConsumer vb = bufferSource.getBuffer(RenderType.solid());
         BlockState state = be.getBlockState();
