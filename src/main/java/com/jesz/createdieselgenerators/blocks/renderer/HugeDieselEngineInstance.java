@@ -95,6 +95,10 @@ public class HugeDieselEngineInstance extends AbstractBlockEntityVisual<HugeDies
                     .uncenter();
         else
             connector.setZeroTransform();
+
+        piston.setChanged();
+        linkage.setChanged();
+        connector.setChanged();
     }
     protected TransformedInstance transformed(TransformedInstance modelData, Direction facing, boolean roll90) {
         return modelData.setIdentityTransform()
